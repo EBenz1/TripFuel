@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกค่าน้ำมันและทริปเที่ยว</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply font style */
+        body {
+            font-family: 'Noto Sans Thai', 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        /* Custom style for clickable table rows */
+        #trip-list tr {
+            cursor: pointer;
+        }
+        #trip-list tr:hover {
+            background-color: #374151; /* gray-700 for better hover visibility */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 bg-gray-900 text-gray-100 transition-colors duration-300">
+
+    <!-- Header Section -->
+    <header class="text-center mb-8 relative">
+        <h1 class="text-4xl font-extrabold text-blue-400">⛽ บันทึกค่าน้ำมันและทริปเที่ยว 🗺️</h1>
+        <p class="text-gray-400 mt-2">ติดตามค่าใช้จ่ายและประสิทธิภาพน้ำมันทุกการเดินทาง</p>
+    </header>
+
+    <!-- Global Message/Alert/Confirm Box -->
+    <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full text-center border border-gray-700">
+            <p id="message-text" class="text-lg font-semibold text-gray-100">ข้อความแจ้งเตือน</p>
+            <div id="alert-actions" class="mt-4">
+                <button onclick="document.getElementById('message-box').classList.add('hidden')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-150">ตกลง</button>
+            </div>
+            <div id="confirm-actions" class="mt-4 hidden">
+                <button id="confirm-yes" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 mr-2">ใช่, ลบเลย</button>
+                <button id="confirm-no" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Trip Details Modal -->
+    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-40 p-4">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-xl w-full text-left relative">
+            <button onclick="document.getElementById('details-modal').classList.add('hidden')" 
+                    class="absolute top-3 right-3 text-gray-400 text-3xl font-bold p-1 leading-none hover:text-red-400 transition">
+                &times;
+            </button>
+            <h2 id="details-title" class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700"></h2>
+            
+            <!-- Details Grid -->
+            <div id="details-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-300">
+                <!-- Content injected by JavaScript -->
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-end mt-6 space-x-3 border-t pt-4 border-gray-700">
+                <!-- AI Analysis Button -->
+                <button id="modal-analyze-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 font-semibold flex items-center justify-center">
+                    ✨ วิเคราะห์ทริปด้วย AI
+                </button>
+                <!-- Image Generation Button -->
+                <button id="modal-create-image-button" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150 font-semibold">
+                    สร้างรูปภาพ 
+                </button>
+                <button id="modal-edit-button" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">
+                    แก้ไขข้อมูลทริป
+                </button>
+                <button id="modal-delete-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 font-semibold">
+                    ลบทริปนี้
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Analysis Modal -->
+    <div id="analysis-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-lg w-full text-left relative">
+            <button onclick="document.getElementById('analysis-modal').classList.add('hidden')" 
+                    class="absolute top-3 right-3 text-gray-400 text-3xl font-bold p-1 leading-none hover:text-red-400 transition">
+                &times;
+            </button>
+            <h2 class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700">✨ บทวิเคราะห์ทริปโดย Gemini AI</h2>
+            <div id="analysis-content" class="text-gray-300 min-h-[100px] whitespace-pre-wrap">
+                <!-- Content injected by JavaScript -->
+            </div>
+            <p class="text-xs text-gray-500 mt-4 text-right">Powered by Gemini API</p>
+        </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <main class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Trip Input Form (Left Column) -->
+        <div class="lg:col-span-1 p-6 bg-gray-800 rounded-xl shadow-lg h-fit shadow-xl">
+            <h2 id="form-title" class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700">บันทึกทริปใหม่</h2>
+            <form id="trip-form" class="space-y-4">
+                
+                <input type="hidden" id="tripId" value=""> 
+
+                <div><label for="tripName" class="block text-sm font-medium text-gray-300">ชื่อทริป</label><input type="text" id="tripName" placeholder="เช่น ทริปเชียงใหม่, เดินทางไปทำงาน" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                <div><label for="tripDate" class="block text-sm font-medium text-gray-300">วัน/เวลา</label><input type="datetime-local" id="tripDate" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                <div><label for="totalDistance" class="block text-sm font-medium text-gray-300">จำนวนกิโลรวมทั้งทริป (กม.)</label><input type="number" id="totalDistance" placeholder="ระยะทางรวมที่เดินทาง" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                <div><label for="startFuelLiters" class="block text-sm font-medium text-gray-300">ลิตรน้ำมันก่อนออกเดินทาง (ลิตร)</label><input type="number" id="startFuelLiters" placeholder="ปริมาณน้ำมันเริ่มต้น (เช่น 40.0)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                <div><label for="endFuelLiters" class="block text-sm font-medium text-gray-300">ลิตรน้ำมันสิ้นสุด (ลิตร)</label><input type="number" id="endFuelLiters" placeholder="ปริมาณน้ำมันที่เหลือ (เช่น 30.5)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                <div><label for="totalFuelCost" class="block text-sm font-medium text-gray-300">ค่าใช้จ่ายน้ำมันรวม (บาท)</label><input type="number" id="totalFuelCost" placeholder="ราคารวมที่จ่าย (เช่น 500.00)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
+                
+                <button type="submit" id="submit-button"
+                        class="w-full py-2 px-4 border border-transparent rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 font-semibold">
+                    บันทึกข้อมูลทริป
+                </button>
+                <button type="button" id="cancel-button" onclick="resetForm()"
+                        class="w-full py-2 px-4 border border-transparent rounded-lg shadow-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 font-semibold hidden">
+                    ยกเลิกการแก้ไข
+                </button>
+            </form>
+        </div>
+
+        <!-- Trip List Table (Right Column) -->
+        <div class="lg:col-span-2 p-6 bg-gray-800 rounded-xl shadow-lg shadow-xl">
+            <h2 class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700 flex justify-between items-center">
+                รายการบันทึกทั้งหมด (คลิกเพื่อดูรายละเอียด)
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ชื่อทริป</th>
+                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">วัน/เวลา</th>
+                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ระยะทาง (กม.)</th>
+                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">น้ำมันที่ใช้ (ลิตร)</th>
+                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ประสิทธิภาพ (กม./ลิตร)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trip-list" class="bg-gray-800 divide-y divide-gray-700">
+                        <!-- Trip rows injected by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Hidden Post Image Template for html2canvas -->
+    <div id="post-image-template" class="fixed top-0 left-0 -z-50 opacity-0" style="width: 500px; height: 500px;">
+        <div id="image-capture-area" class="w-full h-full p-6 flex flex-col justify-between rounded-2xl shadow-xl border-4 border-blue-500" 
+             style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
+            
+            <div class="text-center">
+                <p class="text-xs text-gray-400">บันทึกค่าน้ำมัน | Fuel Log</p>
+                <h3 id="template-trip-name" class="text-4xl font-extrabold mt-1 text-blue-400 truncate">ชื่อทริป</h3>
+                <p id="template-trip-date" class="text-sm text-gray-400 mt-1"></p>
+            </div>
+
+            <div class="flex justify-around items-center text-center my-4">
+                <div class="flex flex-col items-center p-3 bg-gray-700/50 rounded-lg w-1/3 mx-1">
+                    <p class="text-lg font-bold text-yellow-300" id="template-fuel-consumed"></p>
+                    <p class="text-sm text-gray-300">ลิตรที่ใช้</p>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700/50 rounded-lg w-1/3 mx-1">
+                    <p class="text-lg font-bold text-green-300" id="template-distance"></p>
+                    <p class="text-sm text-gray-300">ระยะทาง (กม.)</p>
+                </div>
+            </div>
+
+            <div class="text-center bg-gray-700 p-4 rounded-xl">
+                <p class="text-sm text-gray-300">อัตราสิ้นเปลือง</p>
+                <p class="text-5xl font-black text-white mt-1">
+                    <span id="template-efficiency">--.--</span> 
+                    <span class="text-xl font-bold text-blue-300">กม./ลิตร</span>
+                </p>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-sm font-semibold text-green-400" id="template-cost"></p>
+                <p class="text-xs text-gray-500">#TripLog #FuelEfficiency</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JavaScript Logic (using type="module" for Firebase imports) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- GLOBAL VARIABLES AND CONFIG ---
+        
+        // Global variables injected by the environment (MANDATORY USE)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // Firestore and Auth instances
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        
+        // Local state to hold all trips fetched from Firestore (for quick lookups)
+        let allTrips = []; 
+        
+        // Gemini API Configuration
+        const apiKey = ""; // API key is provided at runtime
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+
+        // --- DOM ELEMENTS (Cached) ---
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const submitButton = document.getElementById('submit-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const formTitle = document.getElementById('form-title');
+        const tripListBody = document.getElementById('trip-list');
+        
+        // Modal Details elements
+        const detailsModal = document.getElementById('details-modal');
+        const detailsTitle = document.getElementById('details-title');
+        const detailsGrid = document.getElementById('details-grid');
+        const modalCreateImageButton = document.getElementById('modal-create-image-button'); 
+        const modalEditButton = document.getElementById('modal-edit-button');
+        const modalDeleteButton = document.getElementById('modal-delete-button');
+
+        // AI elements
+        const analysisModal = document.getElementById('analysis-modal');
+        const analysisContent = document.getElementById('analysis-content');
+        const modalAnalyzeButton = document.getElementById('modal-analyze-button'); 
+
+        
+        // --- FORMATTING HELPERS ---
+        const formatNum = (num) => parseFloat(num).toFixed(2);
+        const formatDistance = (num) => parseInt(num).toLocaleString('th-TH');
+        const formatDateDisplay = (dateString) => new Date(dateString).toLocaleString('th-TH', { 
+            year: 'numeric', month: 'short', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit', hour12: false 
+        }).replace(',', ' ');
+        const formatCurrency = (num) => parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // const formatUrl = (url) => url ? `<a href="${url}" target="_blank" class="text-blue-400 hover:text-blue-300 underline truncate">${url}</a>` : 'ไม่มี';
+
+        // --- MESSAGE HANDLERS ---
+
+        function showMessage(text) {
+            messageText.textContent = text;
+            document.getElementById('alert-actions').classList.remove('hidden');
+            document.getElementById('confirm-actions').classList.add('hidden');
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('flex');
+        }
+
+        function showConfirm(text, callback) {
+            messageText.textContent = text;
+            document.getElementById('alert-actions').classList.add('hidden');
+            document.getElementById('confirm-actions').classList.remove('hidden');
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('flex');
+
+            document.getElementById('confirm-yes').onclick = () => {
+                messageBox.classList.add('hidden');
+                callback(true);
+            };
+            document.getElementById('confirm-no').onclick = () => {
+                messageBox.classList.add('hidden');
+                callback(false);
+            };
+        }
+
+
+        // --- FIREBASE / FIRESTORE HANDLERS (Replacing localStorage) ---
+        
+        function getTripCollectionRef() {
+            if (!db || !userId) {
+                console.error("Database or User ID is not initialized.");
+                return null;
+            }
+            // Private data storage path: /artifacts/{appId}/users/{userId}/trips
+            const path = `artifacts/${appId}/users/${userId}/trips`;
+            return collection(db, path);
+        }
+
+        function setupRealtimeListener() {
+            const tripsRef = getTripCollectionRef();
+            if (!tripsRef) return;
+
+            // Fetch all and sort locally (to avoid index requirement issues from orderBy)
+            const q = query(tripsRef); 
+
+            onSnapshot(q, (snapshot) => {
+                const trips = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    trips.push({ id: doc.id, ...data });
+                });
+                console.log(`Trips loaded from Firestore: ${trips.length}`);
+                displayTrips(trips); 
+            }, (error) => {
+                console.error("Error listening to Firestore:", error);
+                showMessage("เกิดข้อผิดพลาดในการโหลดข้อมูลแบบเรียลไทม์: " + error.message);
+            });
+        }
+
+        async function saveTripToFirestore(tripData) {
+            if (!isAuthReady) {
+                showMessage("ระบบกำลังตรวจสอบสิทธิ์ กรุณารอสักครู่");
+                return;
+            }
+            const tripsRef = getTripCollectionRef();
+            if (!tripsRef) return;
+
+            try {
+                // Prepare data: ensure timestamp is up-to-date or set
+                const dataToSave = {
+                    ...tripData,
+                    timestamp: tripData.timestamp || new Date().toISOString()
+                };
+                
+                if (tripData.id) {
+                    // Update existing trip
+                    await setDoc(doc(tripsRef, tripData.id), dataToSave);
+                    showMessage(`บันทึกการแก้ไขทริป "${tripData.tripName}" สำเร็จ!`);
+                } else {
+                    // Create new trip
+                    await addDoc(tripsRef, dataToSave);
+                    showMessage(`บันทึกทริปใหม่ "${tripData.tripName}" สำเร็จ!`);
+                }
+
+                resetForm();
+            } catch (error) {
+                console.error("Error saving trip to Firestore:", error);
+                showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลไปยังฐานข้อมูล: " + error.message);
+            }
+        }
+
+        function deleteTripFromFirestore(id) {
+            showConfirm("คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้?", async (confirmed) => {
+                if (!confirmed) return;
+                if (!isAuthReady) {
+                    showMessage("ระบบกำลังตรวจสอบสิทธิ์ กรุณารอสักครู่");
+                    return;
+                }
+                const tripsRef = getTripCollectionRef();
+                if (!tripsRef) return;
+
+                try {
+                    await deleteDoc(doc(tripsRef, id));
+                    showMessage("ลบบันทึกทริปเรียบร้อยแล้ว");
+                    detailsModal.classList.add('hidden');
+                } catch (error) {
+                    console.error("Error deleting trip from Firestore:", error);
+                    showMessage("เกิดข้อผิดพลาดในการลบบันทึก: " + error.message);
+                }
+            });
+        }
+
+
+        // --- UTILITY: EXPONENTIAL BACKOFF FOR API CALLS ---
+        async function fetchLLMResponse(payload, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429 && i < retries - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        console.warn(`Rate limit hit. Retrying in ${delay.toFixed(0)}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status}. Details: ${errorBody.error.message}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        return text;
+                    } else {
+                        throw new Error("No content received from Gemini API.");
+                    }
+
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    if (i === retries - 1) throw error; 
+                }
+            }
+        }
+
+        // --- LLM FEATURE: TRIP ANALYSIS ---
+        async function analyzeTripWithGemini(trip) {
+            // 1. Prepare UI for loading
+            detailsModal.classList.add('hidden'); // Hide details modal
+            analysisModal.classList.remove('hidden');
+            analysisModal.classList.add('flex');
+            analysisContent.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-3"></div>
+                    <p class="text-gray-400">กำลังวิเคราะห์ข้อมูลทริป... กรุณารอสักครู่</p>
+                </div>
+            `;
+
+            // 2. Construct Prompt
+            const prompt = `
+                Act as a friendly and insightful travel and efficiency analyst. Analyze the following trip data. 
+                Your response must be in Thai.
+                
+                Data:
+                - Trip Name: ${trip.tripName}
+                - Date: ${new Date(trip.tripDate).toLocaleDateString('th-TH')}
+                - Distance: ${trip.totalDistance} km
+                - Fuel Consumed: ${formatNum(trip.fuelConsumed)} liters
+                - Fuel Efficiency: ${formatNum(trip.fuelEfficiency)} km/liter
+                - Total Cost: ${formatCurrency(trip.totalFuelCost)} Baht
+
+                Provide a concise, single-paragraph summary of the trip's performance, highlighting the fuel efficiency (km/liter). Then, give one specific, actionable tip for improving fuel efficiency or one useful travel insight based on the trip's performance. Format the tip clearly with a bold heading.
+            `;
+            
+            // 3. Construct Payload
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "You are a helpful travel and fuel efficiency analyst. Provide concise, friendly, and accurate analysis in Thai." }]
+                },
+            };
+
+            // 4. Call API and handle response
+            try {
+                const analysisText = await fetchLLMResponse(payload);
+                
+                // Convert simple Markdown output to HTML for display
+                const htmlContent = analysisText
+                    .replace(/\*\*(.*?)\*\*/g, (match, p1) => `<span class="font-bold text-blue-300">${p1}</span>`) // Convert **text** to bold
+                    .replace(/\n\n/g, '<p class="mt-4">') // Double newline to paragraph
+                    .replace(/\n/g, '<br>'); // Single newline to break
+                    
+
+                analysisContent.innerHTML = `<div class="p-3 bg-gray-700 rounded-lg">${htmlContent}</div>`;
+                
+            } catch (error) {
+                console.error("Error during trip analysis:", error);
+                analysisContent.innerHTML = `
+                    <p class="text-red-400">❌ ไม่สามารถทำการวิเคราะห์ได้ในขณะนี้</p>
+                    <p class="text-sm text-gray-500 mt-2">โปรดลองอีกครั้งในภายหลัง หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต: ${error.message}</p>
+                `;
+            }
+        }
+
+
+        // --- UI & MODAL FUNCTIONS ---
+
+        function createPostImage(trip) {
+            detailsModal.classList.add('hidden'); // Hide the details modal first
+            
+            // 1. Get template elements
+            const templateArea = document.getElementById('image-capture-area');
+            const templateContainer = document.getElementById('post-image-template');
+
+            // 2. Populate template with trip data
+            document.getElementById('template-trip-name').textContent = trip.tripName;
+            document.getElementById('template-trip-date').textContent = `บันทึกเมื่อ: ${formatDateDisplay(trip.tripDate)}`;
+            document.getElementById('template-fuel-consumed').textContent = formatNum(trip.fuelConsumed);
+            document.getElementById('template-distance').textContent = formatDistance(trip.totalDistance);
+            document.getElementById('template-efficiency').textContent = formatNum(trip.fuelEfficiency);
+            document.getElementById('template-cost').textContent = `💸 ค่าใช้จ่ายรวม: ${formatCurrency(trip.totalFuelCost)} บาท`;
+            
+            // 3. Make template temporarily visible (still outside viewport)
+            templateContainer.classList.remove('-z-50', 'opacity-0');
+            templateContainer.classList.add('z-50');
+
+            // 4. Use html2canvas to capture the element
+            showMessage('กำลังสร้างรูปภาพ... กรุณารอสักครู่');
+            
+            // Use setTimeout to ensure the DOM has updated before capture
+            setTimeout(() => {
+                html2canvas(templateArea, {
+                    allowTaint: true,
+                    useCORS: true,
+                    scale: 2 // Higher scale for better resolution
+                }).then(canvas => {
+                    // Hide template again
+                    templateContainer.classList.add('-z-50', 'opacity-0');
+                    templateContainer.classList.remove('z-50');
+                    messageBox.classList.add('hidden');
+
+                    // Open the image in a new tab for saving/sharing
+                    const imgData = canvas.toDataURL('image/png');
+                    const newWindow = window.open();
+                    
+                    // Display image and instructions in the new window
+                    newWindow.document.write(`
+                        <html>
+                        <head><title>รูปภาพโพสต์ทริป - ${trip.tripName}</title>
+                        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet">
+                        <style>
+                            body { 
+                                margin: 0; 
+                                background-color: #1f2937; 
+                                display: flex; 
+                                flex-direction: column;
+                                justify-content: center; 
+                                align-items: center; 
+                                min-height: 100vh;
+                                font-family: 'Noto Sans Thai', sans-serif;
+                                color: white;
+                                padding: 1rem;
+                            }
+                        </style>
+                        </head>
+                        <body>
+                            <p style="margin-bottom: 1rem; font-size: 1.2rem; text-align: center; font-weight: 600;">คลิกขวา (หรือกดค้างสำหรับมือถือ) ที่รูป เพื่อบันทึกหรือแชร์</p>
+                            <img src="${imgData}" alt="Trip Post Image" style="max-width: 90%; max-height: 80vh; border: 4px solid #3b82f6; border-radius: 1rem;"/>
+                        </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+
+                    showMessage("สร้างรูปภาพสำเร็จ! รูปภาพจะเปิดในแท็บใหม่เพื่อให้คุณบันทึกหรือแชร์ได้ค่ะ");
+
+                }).catch(error => {
+                    console.error("Error creating image:", error);
+                    templateContainer.classList.add('-z-50', 'opacity-0');
+                    templateContainer.classList.remove('z-50');
+                    showMessage("เกิดข้อผิดพลาดในการสร้างรูปภาพ: " + error.message);
+                });
+            }, 50); // Small delay to ensure template rendering
+
+        }
+
+        function editTrip(id) {
+            const trip = allTrips.find(t => t.id === id); // Use allTrips global state
+
+            if (trip) {
+                detailsModal.classList.add('hidden');
+                
+                // Only take the first 16 characters for datetime-local format
+                const formattedDate = trip.tripDate.substring(0, 16);
+
+                document.getElementById('tripId').value = trip.id;
+                document.getElementById('tripName').value = trip.tripName;
+                document.getElementById('tripDate').value = formattedDate;
+                document.getElementById('totalDistance').value = trip.totalDistance;
+                document.getElementById('startFuelLiters').value = trip.startFuelLiters;
+                document.getElementById('endFuelLiters').value = trip.endFuelLiters;
+                document.getElementById('totalFuelCost').value = trip.totalFuelCost;
+                // Note: No more 'tripUrl' field is handled here.
+                
+                formTitle.textContent = 'กำลังแก้ไข: ' + trip.tripName;
+                submitButton.textContent = 'บันทึกการแก้ไข';
+                cancelButton.classList.remove('hidden');
+
+                document.getElementById('trip-form').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                showMessage("ไม่พบบันทึกที่ต้องการแก้ไข");
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('trip-form').reset();
+            document.getElementById('tripId').value = '';
+            
+            formTitle.textContent = 'บันทึกทริปใหม่';
+            submitButton.textContent = 'บันทึกข้อมูลทริป';
+            cancelButton.classList.add('hidden');
+            
+            // Set default date to current datetime
+            document.getElementById('tripDate').value = new Date().toISOString().substring(0, 16);
+        }
+
+        function showTripDetails(id) {
+            const trip = allTrips.find(t => t.id === id); // Use allTrips global state
+            
+            if (!trip) {
+                showMessage("ไม่พบบันทึกทริป");
+                return;
+            }
+            
+            // 1. Set Title
+            detailsTitle.textContent = trip.tripName;
+            
+            // 2. Populate Details Grid (Focus only on data, removed URL display)
+            detailsGrid.innerHTML = `
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">วัน/เวลา:</span> ${formatDateDisplay(trip.tripDate)}</div>
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ระยะทางรวม:</span> ${formatDistance(trip.totalDistance)} กม.</div>
+                
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ลิตรเริ่มต้น:</span> ${formatNum(trip.startFuelLiters)} ลิตร</div>
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ลิตรสิ้นสุด:</span> ${formatNum(trip.endFuelLiters)} ลิตร</div>
+
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">น้ำมันที่ใช้:</span> <span class="text-yellow-400 font-bold">${formatNum(trip.fuelConsumed)} ลิตร</span></div>
+                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ประสิทธิภาพ:</span> <span class="text-blue-400 font-bold">${formatNum(trip.fuelEfficiency)} กม./ลิตร</span></div>
+
+                <div class="col-span-2"><span class="font-semibold text-gray-400">ค่าใช้จ่ายรวม:</span> <span class="text-green-400 font-bold">${formatCurrency(trip.totalFuelCost)} บาท</span></div>
+            `;
+            
+            // 3. Attach actions to modal buttons
+            modalAnalyzeButton.onclick = () => analyzeTripWithGemini(trip); 
+            modalCreateImageButton.onclick = () => createPostImage(trip); 
+            modalEditButton.onclick = () => editTrip(trip.id);
+            modalDeleteButton.onclick = () => deleteTripFromFirestore(trip.id);
+
+            // 4. Show Modal
+            detailsModal.classList.remove('hidden');
+            detailsModal.classList.add('flex');
+        }
+        
+        // Display the list of trips in the table
+        function displayTrips(trips) {
+            // Sort by timestamp (most recent first) locally
+            trips.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            allTrips = trips; // Update global state
+            
+            tripListBody.innerHTML = '';
+
+            if (trips.length === 0) {
+                tripListBody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-sm text-gray-400">ไม่มีบันทึกการเดินทาง</td></tr>`; 
+                return;
+            }
+            
+            trips.forEach(trip => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-700 transition duration-150';
+                row.setAttribute('data-id', trip.id);
+                row.onclick = () => showTripDetails(trip.id);
+                
+                row.innerHTML = `
+                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-100">${trip.tripName}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-xs text-gray-400">${formatDateDisplay(trip.tripDate)}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-300 text-right">${formatDistance(trip.totalDistance)}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-300 text-right">${formatNum(trip.fuelConsumed)}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-blue-400 font-semibold text-right">${formatNum(trip.fuelEfficiency)}</td>
+                `;
+                tripListBody.appendChild(row);
+            });
+        }
+
+
+        // --- EVENT LISTENERS (TRIP FORM) ---
+
+        document.getElementById('trip-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('tripId').value || null; 
+            const tripName = document.getElementById('tripName').value.trim();
+            const tripDate = document.getElementById('tripDate').value;
+            // Use Number() for explicit conversion before calculation
+            const totalDistance = Number(document.getElementById('totalDistance').value); 
+            const startFuelLiters = Number(document.getElementById('startFuelLiters').value); 
+            const endFuelLiters = Number(document.getElementById('endFuelLiters').value); 
+            const totalFuelCost = Number(document.getElementById('totalFuelCost').value); 
+            // Note: tripUrl is no longer collected
+
+            // Validation
+            if (startFuelLiters < endFuelLiters) {
+                showMessage("ลิตรน้ำมันเริ่มต้นต้องมากกว่าหรือเท่ากับลิตรน้ำมันสิ้นสุด!");
+                return;
+            }
+            if (totalDistance <= 0 || totalFuelCost < 0) { // Total cost can be 0 if the trip was logged for distance only, but let's keep it > 0 for standard
+                showMessage("ระยะทางรวมต้องมากกว่าศูนย์! (ค่าใช้จ่ายรวมต้องไม่ติดลบ)");
+                return;
+            }
+
+            // Calculations
+            const fuelConsumed = startFuelLiters - endFuelLiters;
+            
+            if (fuelConsumed <= 0) {
+                showMessage("ปริมาณน้ำมันที่ใช้ต้องมากกว่าศูนย์! (ลิตรเริ่มต้น > ลิตรสิ้นสุด)");
+                return;
+            }    
+            
+            const fuelEfficiency = totalDistance / fuelConsumed; 
+            
+            const tripData = {
+                id, 
+                tripName,
+                tripDate,
+                totalDistance, 
+                startFuelLiters, 
+                endFuelLiters, 
+                fuelConsumed,
+                totalFuelCost,
+                fuelEfficiency,
+                // Note: tripUrl is no longer saved
+            };
+
+            saveTripToFirestore(tripData);
+        });
+        
+        // --- FIREBASE AUTHENTICATION AND INITIALIZATION ---
+
+        async function authenticateAndInit() {
+            setLogLevel('Debug'); // Enable debug logging for Firestore
+
+            // 1. Initialize Firebase App
+            if (Object.keys(firebaseConfig).length > 0) {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            } else {
+                console.error("Firebase config not available. Cannot initialize Firestore.");
+                showMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Firebase config หายไป)");
+                return;
+            }
+
+            // 2. Authentication
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    // Sign in using custom token or anonymously
+                    if (initialAuthToken) {
+                        try {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } catch (error) {
+                            console.error("Custom token sign-in failed. Falling back to anonymous:", error);
+                            await signInAnonymously(auth);
+                        }
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                }
+                // Once authenticated (or anonymously signed in), set userId and ready flag
+                userId = auth.currentUser.uid;
+                isAuthReady = true;
+                console.log(`Auth Ready. User ID: ${userId}`);
+                
+                // 3. Start real-time data listener
+                setupRealtimeListener();
+            });
+        }
+
+        // --- APPLICATION INITIALIZATION ---
+
+        window.onload = () => {
+            resetForm(); 
+            authenticateAndInit();
+        };
+
+    </script>
+</body>
+</html>
