@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght+400;600;700&display=swap" rel="stylesheet">
     <style>
         /* Apply font style */
         body {
@@ -29,13 +29,11 @@
 </head>
 <body class="p-4 sm:p-8 bg-gray-900 text-gray-100 transition-colors duration-300">
 
-    <!-- Header Section -->
     <header class="text-center mb-8 relative">
         <h1 class="text-4xl font-extrabold text-blue-400">⛽ บันทึกค่าน้ำมันและทริปเที่ยว 🗺️</h1>
         <p class="text-gray-400 mt-2">ติดตามค่าใช้จ่ายและประสิทธิภาพน้ำมันทุกการเดินทาง</p>
     </header>
 
-    <!-- Global Message/Alert/Confirm Box -->
     <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full text-center border border-gray-700">
             <p id="message-text" class="text-lg font-semibold text-gray-100">ข้อความแจ้งเตือน</p>
@@ -49,7 +47,6 @@
         </div>
     </div>
     
-    <!-- Trip Details Modal -->
     <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-40 p-4">
         <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-xl w-full text-left relative">
             <button onclick="document.getElementById('details-modal').classList.add('hidden')" 
@@ -58,18 +55,13 @@
             </button>
             <h2 id="details-title" class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700"></h2>
             
-            <!-- Details Grid -->
             <div id="details-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-300">
-                <!-- Content injected by JavaScript -->
-            </div>
+                </div>
             
-            <!-- Action Buttons -->
             <div class="flex justify-end mt-6 space-x-3 border-t pt-4 border-gray-700">
-                <!-- AI Analysis Button -->
                 <button id="modal-analyze-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 font-semibold flex items-center justify-center">
                     ✨ วิเคราะห์ทริปด้วย AI
                 </button>
-                <!-- Image Generation Button -->
                 <button id="modal-create-image-button" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150 font-semibold">
                     สร้างรูปภาพ 
                 </button>
@@ -83,7 +75,6 @@
         </div>
     </div>
     
-    <!-- AI Analysis Modal -->
     <div id="analysis-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
         <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-lg w-full text-left relative">
             <button onclick="document.getElementById('analysis-modal').classList.add('hidden')" 
@@ -92,16 +83,13 @@
             </button>
             <h2 class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700">✨ บทวิเคราะห์ทริปโดย Gemini AI</h2>
             <div id="analysis-content" class="text-gray-300 min-h-[100px] whitespace-pre-wrap">
-                <!-- Content injected by JavaScript -->
-            </div>
+                </div>
             <p class="text-xs text-gray-500 mt-4 text-right">Powered by Gemini API</p>
         </div>
     </div>
 
-    <!-- Main Content Layout -->
     <main class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Trip Input Form (Left Column) -->
         <div class="lg:col-span-1 p-6 bg-gray-800 rounded-xl shadow-lg h-fit shadow-xl">
             <h2 id="form-title" class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700">บันทึกทริปใหม่</h2>
             <form id="trip-form" class="space-y-4">
@@ -126,7 +114,6 @@
             </form>
         </div>
 
-        <!-- Trip List Table (Right Column) -->
         <div class="lg:col-span-2 p-6 bg-gray-800 rounded-xl shadow-lg shadow-xl">
             <h2 class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700 flex justify-between items-center">
                 รายการบันทึกทั้งหมด (คลิกเพื่อดูรายละเอียด)
@@ -144,14 +131,12 @@
                         </tr>
                     </thead>
                     <tbody id="trip-list" class="bg-gray-800 divide-y divide-gray-700">
-                        <!-- Trip rows injected by JavaScript -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
     </main>
     
-    <!-- Hidden Post Image Template for html2canvas -->
     <div id="post-image-template" class="fixed top-0 left-0 -z-50 opacity-0" style="width: 500px; height: 500px;">
         <div id="image-capture-area" class="w-full h-full p-6 flex flex-col justify-between rounded-2xl shadow-xl border-4 border-blue-500" 
              style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
@@ -189,31 +174,17 @@
     </div>
 
 
-    <!-- JavaScript Logic (using type="module" for Firebase imports) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, query, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
         // --- GLOBAL VARIABLES AND CONFIG ---
         
-        // Global variables injected by the environment (MANDATORY USE)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const LOCAL_STORAGE_KEY = 'fuel_trips';
         
-        // Firestore and Auth instances
-        let app;
-        let db;
-        let auth;
-        let userId = null;
-        let isAuthReady = false;
-        
-        // Local state to hold all trips fetched from Firestore (for quick lookups)
+        // Local state to hold all trips fetched from Local Storage
         let allTrips = []; 
         
-        // Gemini API Configuration
-        const apiKey = ""; // API key is provided at runtime
+        // Gemini API Configuration (KEPT, but no longer depends on Firebase context)
+        // **NOTE: For this feature to work, you must replace the empty string with your actual Gemini API Key.**
+        const apiKey = ""; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
 
@@ -247,7 +218,6 @@
             hour: '2-digit', minute: '2-digit', hour12: false 
         }).replace(',', ' ');
         const formatCurrency = (num) => parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        // const formatUrl = (url) => url ? `<a href="${url}" target="_blank" class="text-blue-400 hover:text-blue-300 underline truncate">${url}</a>` : 'ไม่มี';
 
         // --- MESSAGE HANDLERS ---
 
@@ -277,95 +247,78 @@
         }
 
 
-        // --- FIREBASE / FIRESTORE HANDLERS (Replacing localStorage) ---
+        // --- LOCAL STORAGE HANDLERS (New) ---
         
-        function getTripCollectionRef() {
-            if (!db || !userId) {
-                console.error("Database or User ID is not initialized.");
-                return null;
-            }
-            // Private data storage path: /artifacts/{appId}/users/{userId}/trips
-            const path = `artifacts/${appId}/users/${userId}/trips`;
-            return collection(db, path);
-        }
-
-        function setupRealtimeListener() {
-            const tripsRef = getTripCollectionRef();
-            if (!tripsRef) return;
-
-            // Fetch all and sort locally (to avoid index requirement issues from orderBy)
-            const q = query(tripsRef); 
-
-            onSnapshot(q, (snapshot) => {
-                const trips = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    trips.push({ id: doc.id, ...data });
-                });
-                console.log(`Trips loaded from Firestore: ${trips.length}`);
-                displayTrips(trips); 
-            }, (error) => {
-                console.error("Error listening to Firestore:", error);
-                showMessage("เกิดข้อผิดพลาดในการโหลดข้อมูลแบบเรียลไทม์: " + error.message);
-            });
-        }
-
-        async function saveTripToFirestore(tripData) {
-            if (!isAuthReady) {
-                showMessage("ระบบกำลังตรวจสอบสิทธิ์ กรุณารอสักครู่");
-                return;
-            }
-            const tripsRef = getTripCollectionRef();
-            if (!tripsRef) return;
-
+        function loadTripsFromLocalStorage() {
             try {
-                // Prepare data: ensure timestamp is up-to-date or set
-                const dataToSave = {
-                    ...tripData,
-                    timestamp: tripData.timestamp || new Date().toISOString()
-                };
-                
-                if (tripData.id) {
-                    // Update existing trip
-                    await setDoc(doc(tripsRef, tripData.id), dataToSave);
+                const json = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return json ? JSON.parse(json) : [];
+            } catch (error) {
+                console.error("Error loading from local storage:", error);
+                return [];
+            }
+        }
+        
+        function saveTripsToLocalStorage(trips) {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trips));
+                // Reload and display data immediately to simulate real-time update
+                displayTrips(loadTripsFromLocalStorage());
+            } catch (error) {
+                console.error("Error saving to local storage:", error);
+                showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล: พื้นที่จัดเก็บเต็มหรือไม่ได้รับอนุญาต");
+            }
+        }
+
+        function saveTrip(tripData) {
+            const trips = loadTripsFromLocalStorage();
+            const now = new Date().toISOString();
+            
+            if (tripData.id) {
+                // Update existing trip
+                const index = trips.findIndex(t => t.id === tripData.id);
+                if (index > -1) {
+                    trips[index] = { ...tripData, timestamp: trips[index].timestamp || now }; // Keep original timestamp
                     showMessage(`บันทึกการแก้ไขทริป "${tripData.tripName}" สำเร็จ!`);
                 } else {
-                    // Create new trip
-                    await addDoc(tripsRef, dataToSave);
-                    showMessage(`บันทึกทริปใหม่ "${tripData.tripName}" สำเร็จ!`);
+                     showMessage(`ไม่พบบันทึกทริปสำหรับแก้ไข`);
                 }
-
-                resetForm();
-            } catch (error) {
-                console.error("Error saving trip to Firestore:", error);
-                showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูลไปยังฐานข้อมูล: " + error.message);
+            } else {
+                // Create new trip: Generate a simple unique ID (timestamp + random)
+                const newId = now + Math.random().toString(36).substring(2, 9);
+                trips.push({ ...tripData, id: newId, timestamp: now });
+                showMessage(`บันทึกทริปใหม่ "${tripData.tripName}" สำเร็จ!`);
             }
+
+            saveTripsToLocalStorage(trips);
+            resetForm();
         }
 
-        function deleteTripFromFirestore(id) {
-            showConfirm("คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้?", async (confirmed) => {
+        function deleteTrip(id) {
+            showConfirm("คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้?", (confirmed) => {
                 if (!confirmed) return;
-                if (!isAuthReady) {
-                    showMessage("ระบบกำลังตรวจสอบสิทธิ์ กรุณารอสักครู่");
-                    return;
-                }
-                const tripsRef = getTripCollectionRef();
-                if (!tripsRef) return;
-
-                try {
-                    await deleteDoc(doc(tripsRef, id));
+                
+                let trips = loadTripsFromLocalStorage();
+                const initialLength = trips.length;
+                trips = trips.filter(t => t.id !== id);
+                
+                if (trips.length < initialLength) {
+                    saveTripsToLocalStorage(trips);
                     showMessage("ลบบันทึกทริปเรียบร้อยแล้ว");
                     detailsModal.classList.add('hidden');
-                } catch (error) {
-                    console.error("Error deleting trip from Firestore:", error);
-                    showMessage("เกิดข้อผิดพลาดในการลบบันทึก: " + error.message);
+                } else {
+                    showMessage("ไม่พบบันทึกที่ต้องการลบ");
                 }
             });
         }
 
 
-        // --- UTILITY: EXPONENTIAL BACKOFF FOR API CALLS ---
+        // --- UTILITY: EXPONENTIAL BACKOFF FOR API CALLS (Kept for AI feature) ---
         async function fetchLLMResponse(payload, retries = 3) {
+            if (!apiKey) {
+                throw new Error("Gemini API Key is missing. Please set the apiKey variable.");
+            }
+
             for (let i = 0; i < retries; i++) {
                 try {
                     const response = await fetch(apiUrl, {
@@ -402,8 +355,13 @@
             }
         }
 
-        // --- LLM FEATURE: TRIP ANALYSIS ---
+        // --- LLM FEATURE: TRIP ANALYSIS (Kept for AI feature) ---
         async function analyzeTripWithGemini(trip) {
+            if (!apiKey) {
+                showMessage("❌ ไม่สามารถวิเคราะห์ได้: ต้องใส่ Gemini API Key ในโค้ดก่อน");
+                return;
+            }
+
             // 1. Prepare UI for loading
             detailsModal.classList.add('hidden'); // Hide details modal
             analysisModal.classList.remove('hidden');
@@ -558,7 +516,6 @@
                 document.getElementById('startFuelLiters').value = trip.startFuelLiters;
                 document.getElementById('endFuelLiters').value = trip.endFuelLiters;
                 document.getElementById('totalFuelCost').value = trip.totalFuelCost;
-                // Note: No more 'tripUrl' field is handled here.
                 
                 formTitle.textContent = 'กำลังแก้ไข: ' + trip.tripName;
                 submitButton.textContent = 'บันทึกการแก้ไข';
@@ -570,7 +527,7 @@
             }
         }
 
-        function resetForm() {
+        window.resetForm = function() {
             document.getElementById('trip-form').reset();
             document.getElementById('tripId').value = '';
             
@@ -593,7 +550,7 @@
             // 1. Set Title
             detailsTitle.textContent = trip.tripName;
             
-            // 2. Populate Details Grid (Focus only on data, removed URL display)
+            // 2. Populate Details Grid
             detailsGrid.innerHTML = `
                 <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">วัน/เวลา:</span> ${formatDateDisplay(trip.tripDate)}</div>
                 <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ระยะทางรวม:</span> ${formatDistance(trip.totalDistance)} กม.</div>
@@ -611,7 +568,7 @@
             modalAnalyzeButton.onclick = () => analyzeTripWithGemini(trip); 
             modalCreateImageButton.onclick = () => createPostImage(trip); 
             modalEditButton.onclick = () => editTrip(trip.id);
-            modalDeleteButton.onclick = () => deleteTripFromFirestore(trip.id);
+            modalDeleteButton.onclick = () => deleteTrip(trip.id); // Use new delete function
 
             // 4. Show Modal
             detailsModal.classList.remove('hidden');
@@ -662,14 +619,13 @@
             const startFuelLiters = Number(document.getElementById('startFuelLiters').value); 
             const endFuelLiters = Number(document.getElementById('endFuelLiters').value); 
             const totalFuelCost = Number(document.getElementById('totalFuelCost').value); 
-            // Note: tripUrl is no longer collected
 
             // Validation
             if (startFuelLiters < endFuelLiters) {
                 showMessage("ลิตรน้ำมันเริ่มต้นต้องมากกว่าหรือเท่ากับลิตรน้ำมันสิ้นสุด!");
                 return;
             }
-            if (totalDistance <= 0 || totalFuelCost < 0) { // Total cost can be 0 if the trip was logged for distance only, but let's keep it > 0 for standard
+            if (totalDistance <= 0 || totalFuelCost < 0) { 
                 showMessage("ระยะทางรวมต้องมากกว่าศูนย์! (ค่าใช้จ่ายรวมต้องไม่ติดลบ)");
                 return;
             }
@@ -694,58 +650,18 @@
                 fuelConsumed,
                 totalFuelCost,
                 fuelEfficiency,
-                // Note: tripUrl is no longer saved
             };
 
-            saveTripToFirestore(tripData);
+            saveTrip(tripData); // Use the new local storage save function
         });
         
-        // --- FIREBASE AUTHENTICATION AND INITIALIZATION ---
-
-        async function authenticateAndInit() {
-            setLogLevel('Debug'); // Enable debug logging for Firestore
-
-            // 1. Initialize Firebase App
-            if (Object.keys(firebaseConfig).length > 0) {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-            } else {
-                console.error("Firebase config not available. Cannot initialize Firestore.");
-                showMessage("ไม่สามารถเชื่อมต่อฐานข้อมูลได้ (Firebase config หายไป)");
-                return;
-            }
-
-            // 2. Authentication
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    // Sign in using custom token or anonymously
-                    if (initialAuthToken) {
-                        try {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } catch (error) {
-                            console.error("Custom token sign-in failed. Falling back to anonymous:", error);
-                            await signInAnonymously(auth);
-                        }
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                }
-                // Once authenticated (or anonymously signed in), set userId and ready flag
-                userId = auth.currentUser.uid;
-                isAuthReady = true;
-                console.log(`Auth Ready. User ID: ${userId}`);
-                
-                // 3. Start real-time data listener
-                setupRealtimeListener();
-            });
-        }
-
+        
         // --- APPLICATION INITIALIZATION ---
 
         window.onload = () => {
             resetForm(); 
-            authenticateAndInit();
+            // Initial load of data from Local Storage
+            displayTrips(loadTripsFromLocalStorage()); 
         };
 
     </script>
