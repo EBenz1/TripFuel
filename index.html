@@ -3,666 +3,873 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกค่าน้ำมันและทริปเที่ยว</title>
+    <title>บันทึกค่าน้ำมันทริป</title>
     
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FIX: Load IBM Plex Sans Thai Font correctly -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- ยืนยันว่ามีการโหลดฟอนต์ IBM Plex Sans Thai weights 300, 400, 600, 700 ถูกต้อง -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Load html2canvas library for capturing the image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Thai:wght+400;600;700&display=swap" rel="stylesheet">
+    <!-- ====================================================================== -->
+    <!-- [การเพิ่ม 1]: ตั้งค่า FAVICON โดยใช้ SVG Data URL -->
+    <!-- ใช้โค้ด SVG เดียวกันกับโลโก้ใน Header เพื่อให้เป็น Favicon -->
+    <!-- โค้ด SVG ถูกย่อขนาดและเข้ารหัสเป็น Data URI -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeOffset result='offOut' in='SourceGraphic' dx='0' dy='0'%3E%3C/feOffset%3E%3CfeGaussianBlur result='blurOut' in='offOut' stdDeviation='1'%3E%3C/feGaussianBlur%3E%3CfeBlend in='SourceGraphic' in2='blurOut' mode='normal'%3E%3C/feBlend%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23a)'%3E%3Cpath fill='%231E293B' d='M0 0h100v100H0z'%3E%3C/path%3E%3Cpath fill='%233B82F6' d='M40 75h20v10H40z'%3E%3C/path%3E%3Cpath fill='%2394A3B8' d='M30 35h40v30H30z'%3E%3C/path%3E%3Cpath fill='%23FBBF24' d='M50 30L65 55H35z'%3E%3C/path%3E%3Cpath fill='%23DC2626' d='M45 50L55 50L50 60z'%3E%3C/path%3E%3Cpath fill='%23FBBF24' d='M65 55L75 65L65 75z'%3E%3C/path%3E%3Cpath fill='%233B82F6' d='M40 75L50 85L60 75z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E">
+    <!-- ====================================================================== -->
+
     <style>
-        /* Apply font style */
+        /* FIX: ยืนยันการใช้งาน IBM Plex Sans Thai เป็นฟอนต์หลักสำหรับ Body */
         body {
-            font-family: 'Noto Sans Thai', 'Inter', sans-serif;
-            min-height: 100vh;
+            font-family: 'IBM Plex Sans Thai', sans-serif; 
+            transition: background-color 0.3s;
         }
-        .container {
-            max-width: 1200px;
+        /* ซ่อนหน้าที่ไม่ได้ใช้งาน */
+        .page {
+            display: none;
         }
-        /* Custom style for clickable table rows */
-        #trip-list tr {
-            cursor: pointer;
+        /* แสดงหน้าที่ถูกเลือก */
+        .page.active {
+            display: block;
         }
-        #trip-list tr:hover {
-            background-color: #374151; /* gray-700 for better hover visibility */
+        /* ปรับสไตล์ของ input date/time ใน dark mode */
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            /* ไม่ต้อง invert เพราะเราใช้สี Dark Mode แล้ว */
+            filter: none; 
+        }
+        
+        /* สไตล์เพิ่มเติมสำหรับ Input Fields */
+        .custom-input {
+            transition: all 0.2s ease-in-out;
+            border-radius: 8px; /* เพิ่มความโค้งมน */
+            /* ปรับ: ใช้สีเทาอ่อนลงสำหรับขอบและพื้นหลัง */
+            border: 1px solid #475569; /* slate-600 */
+        }
+        .custom-input:focus {
+            border-color: #3B82F6; /* blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* เพิ่มแสงเงาสีน้ำเงินเมื่อ Focus */
+            background-color: #1E293B; /* slate-800 เข้มขึ้นเมื่อ Focus */
+        }
+        
+        /* สไตล์สำหรับปุ่มบันทึก/อัปเดต */
+        .action-button {
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* สไตล์เฉพาะสำหรับ Export Template (ต้องไม่แสดงผลบนหน้าจอหลัก) */
+        #export-template-container {
+            /* สำคัญ: ใช้ absolute เพื่อซ่อน แต่ยังให้ html2canvas จับได้ */
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            /* ต้องกำหนดความกว้างให้ชัดเจนเพื่อให้ภาพที่ออกมามีขนาดแน่นอน */
+            width: 650px; 
+            /* ปรับ: ใช้สีเทาเข้มเป็นพื้นหลังตามโทนสีหลัก */
+            background-color: #0F172A; /* slate-900 */
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 bg-gray-900 text-gray-100 transition-colors duration-300">
+<!-- ปรับ: ใช้ slate-900 เป็นพื้นหลังหลัก และ text-slate-200 เป็นสีตัวอักษรหลัก -->
+<body class="bg-slate-900 text-slate-200"> 
 
-    <header class="text-center mb-8 relative">
-        <h1 class="text-4xl font-extrabold text-blue-400">⛽ บันทึกค่าน้ำมันและทริปเที่ยว 🗺️</h1>
-        <p class="text-gray-400 mt-2">ติดตามค่าใช้จ่ายและประสิทธิภาพน้ำมันทุกการเดินทาง</p>
-    </header>
-
-    <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-full text-center border border-gray-700">
-            <p id="message-text" class="text-lg font-semibold text-gray-100">ข้อความแจ้งเตือน</p>
-            <div id="alert-actions" class="mt-4">
-                <button onclick="document.getElementById('message-box').classList.add('hidden')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-150">ตกลง</button>
-            </div>
-            <div id="confirm-actions" class="mt-4 hidden">
-                <button id="confirm-yes" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 mr-2">ใช่, ลบเลย</button>
-                <button id="confirm-no" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-150">ยกเลิก</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-40 p-4">
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-xl w-full text-left relative">
-            <button onclick="document.getElementById('details-modal').classList.add('hidden')" 
-                    class="absolute top-3 right-3 text-gray-400 text-3xl font-bold p-1 leading-none hover:text-red-400 transition">
-                &times;
-            </button>
-            <h2 id="details-title" class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700"></h2>
+    <div class="container mx-auto max-w-5xl p-4">
+        
+        <!-- Header & Navigation -->
+        <!-- ปรับ: ใช้ slate-800 เป็นพื้นหลัง, border-t-4 เป็นสีน้ำเงิน -->
+        <header class="bg-slate-800 rounded-xl shadow-2xl p-6 mb-8 border-t-4 border-blue-500"> 
             
-            <div id="details-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-300">
-                </div>
-            
-            <div class="flex justify-end mt-6 space-x-3 border-t pt-4 border-gray-700">
-                <button id="modal-analyze-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-150 font-semibold flex items-center justify-center">
-                    ✨ วิเคราะห์ทริปด้วย AI
-                </button>
-                <button id="modal-create-image-button" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150 font-semibold">
-                    สร้างรูปภาพ 
-                </button>
-                <button id="modal-edit-button" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-150 font-semibold">
-                    แก้ไขข้อมูลทริป
-                </button>
-                <button id="modal-delete-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-150 font-semibold">
-                    ลบทริปนี้
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="analysis-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-lg w-full text-left relative">
-            <button onclick="document.getElementById('analysis-modal').classList.add('hidden')" 
-                    class="absolute top-3 right-3 text-gray-400 text-3xl font-bold p-1 leading-none hover:text-red-400 transition">
-                &times;
-            </button>
-            <h2 class="text-3xl font-bold text-blue-400 mb-4 border-b pb-2 border-gray-700">✨ บทวิเคราะห์ทริปโดย Gemini AI</h2>
-            <div id="analysis-content" class="text-gray-300 min-h-[100px] whitespace-pre-wrap">
-                </div>
-            <p class="text-xs text-gray-500 mt-4 text-right">Powered by Gemini API</p>
-        </div>
-    </div>
+            <!-- ====================================================================== -->
+            <!-- [การเพิ่ม 2]: โลโก้ SVG พร้อมชื่อแอป -->
+            <div class="flex items-center space-x-3 mb-2">
+                <!-- Inline SVG Logo: ผสมผสาน รถ/หัวจ่าย/สมุดโน้ต/กราฟ (โทนน้ำเงิน/เทา/เหลือง/แดง) -->
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- พื้นหลังใส/Dark Mode -->
+                    <!-- กราฟ/เส้นทาง (น้ำเงิน) -->
+                    <path d="M15 85 L35 65 L60 85 L90 50" stroke="#3B82F6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- รถยนต์ (น้ำเงินเข้ม) -->
+                    <path d="M20 75 L30 75 L35 70 L70 70 L75 75 L80 75 C82.76 75 85 72.76 85 70 V65 C85 62.24 82.76 60 80 60 H25 C22.24 60 20 62.24 20 65 V75 Z" fill="#1E293B"/>
+                    <!-- กระจกหน้าต่าง (เทาอ่อน) -->
+                    <path d="M35 70 L40 65 H65 L70 70 Z" fill="#94A3B8"/>
+                    <!-- ล้อรถ (เทาเข้ม) -->
+                    <circle cx="30" cy="75" r="5" fill="#334155"/>
+                    <circle cx="75" cy="75" r="5" fill="#334155"/>
+                    <!-- สมุดบันทึก (เทาอ่อน) -->
+                    <rect x="50" y="20" width="30" height="35" rx="4" fill="#E2E8F0"/>
+                    <rect x="53" y="25" width="24" height="4" fill="#94A3B8"/>
+                    <rect x="53" y="32" width="24" height="4" fill="#94A3B8"/>
+                    <rect x="53" y="39" width="15" height="4" fill="#94A3B8"/>
+                    <!-- หัวจ่ายน้ำมัน (แดงและเหลือง) -->
+                    <path d="M40 70 L45 70 V60 H35 L40 65 Z" fill="#DC2626"/>
+                    <path d="M45 60 L45 50 L55 50 V60 Z" fill="#FBBF24"/>
+                    <!-- หยดน้ำมัน (เหลือง) -->
+                    <circle cx="45" cy="65" r="3" fill="#FBBF24"/>
+                    <!-- ดินสอ (เหลือง/เทา) -->
+                    <rect x="30" y="25" width="25" height="8" rx="2" transform="rotate(-30 30 25)" fill="#FBBF24"/>
+                    <path d="M35 25 L38 27 L35 29 Z" fill="#94A3B8" transform="rotate(-30 30 25)"/>
 
-    <main class="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        <div class="lg:col-span-1 p-6 bg-gray-800 rounded-xl shadow-lg h-fit shadow-xl">
-            <h2 id="form-title" class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700">บันทึกทริปใหม่</h2>
-            <form id="trip-form" class="space-y-4">
+                </svg>
                 
-                <input type="hidden" id="tripId" value=""> 
-
-                <div><label for="tripName" class="block text-sm font-medium text-gray-300">ชื่อทริป</label><input type="text" id="tripName" placeholder="เช่น ทริปเชียงใหม่, เดินทางไปทำงาน" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                <div><label for="tripDate" class="block text-sm font-medium text-gray-300">วัน/เวลา</label><input type="datetime-local" id="tripDate" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                <div><label for="totalDistance" class="block text-sm font-medium text-gray-300">จำนวนกิโลรวมทั้งทริป (กม.)</label><input type="number" id="totalDistance" placeholder="ระยะทางรวมที่เดินทาง" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                <div><label for="startFuelLiters" class="block text-sm font-medium text-gray-300">ลิตรน้ำมันก่อนออกเดินทาง (ลิตร)</label><input type="number" id="startFuelLiters" placeholder="ปริมาณน้ำมันเริ่มต้น (เช่น 40.0)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                <div><label for="endFuelLiters" class="block text-sm font-medium text-gray-300">ลิตรน้ำมันสิ้นสุด (ลิตร)</label><input type="number" id="endFuelLiters" placeholder="ปริมาณน้ำมันที่เหลือ (เช่น 30.5)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                <div><label for="totalFuelCost" class="block text-sm font-medium text-gray-300">ค่าใช้จ่ายน้ำมันรวม (บาท)</label><input type="number" id="totalFuelCost" placeholder="ราคารวมที่จ่าย (เช่น 500.00)" step="0.01" min="0" required class="mt-1 block w-full px-4 py-2 border border-gray-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-gray-700 text-gray-100"></div>
-                
-                <button type="submit" id="submit-button"
-                        class="w-full py-2 px-4 border border-transparent rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 font-semibold">
-                    บันทึกข้อมูลทริป
-                </button>
-                <button type="button" id="cancel-button" onclick="resetForm()"
-                        class="w-full py-2 px-4 border border-transparent rounded-lg shadow-md text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 font-semibold hidden">
-                    ยกเลิกการแก้ไข
-                </button>
-            </form>
-        </div>
-
-        <div class="lg:col-span-2 p-6 bg-gray-800 rounded-xl shadow-lg shadow-xl">
-            <h2 class="text-2xl font-bold text-gray-100 mb-4 border-b pb-2 border-gray-700 flex justify-between items-center">
-                รายการบันทึกทั้งหมด (คลิกเพื่อดูรายละเอียด)
-            </h2>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-700">
-                    <thead class="bg-gray-700">
-                        <tr>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ชื่อทริป</th>
-                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">วัน/เวลา</th>
-                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ระยะทาง (กม.)</th>
-                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">น้ำมันที่ใช้ (ลิตร)</th>
-                            <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ประสิทธิภาพ (กม./ลิตร)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trip-list" class="bg-gray-800 divide-y divide-gray-700">
-                        </tbody>
-                </table>
+                <!-- ปรับ: ใช้สีน้ำเงิน 400 เป็นสีหลักของแอป และเพิ่มขนาด font -->
+                <h1 class="text-4xl font-bold text-blue-400">FuelTrip Logger</h1>
             </div>
-        </div>
-    </main>
-    
-    <div id="post-image-template" class="fixed top-0 left-0 -z-50 opacity-0" style="width: 500px; height: 500px;">
-        <div id="image-capture-area" class="w-full h-full p-6 flex flex-col justify-between rounded-2xl shadow-xl border-4 border-blue-500" 
-             style="background: linear-gradient(135deg, #1f2937, #111827); color: white;">
+            <p class="text-slate-400 mt-1">เครื่องมือติดตามค่าใช้จ่ายน้ำมันสำหรับมืออาชีพ</p>
+            <!-- ====================================================================== -->
             
-            <div class="text-center">
-                <p class="text-xs text-gray-400">บันทึกค่าน้ำมัน | Fuel Log</p>
-                <h3 id="template-trip-name" class="text-4xl font-extrabold mt-1 text-blue-400 truncate">ชื่อทริป</h3>
-                <p id="template-trip-date" class="text-sm text-gray-400 mt-1"></p>
-            </div>
+            <nav class="mt-5">
+                <ul class="flex space-x-6">
+                    <!-- ปรับ: สีนำทางหลักเป็นน้ำเงิน -->
+                    <li><button data-page="summary" class="nav-link font-semibold text-blue-400 border-b-2 border-blue-400 pb-1 hover:text-blue-300">หน้าสรุป</button></li>
+                    <li><button data-page="add-trip" class="nav-link font-semibold text-slate-400 hover:text-blue-400">บันทึกทริป</button></li>
+                    <li><button data-page="all-trips" class="nav-link font-semibold text-slate-400 hover:text-blue-400">รายการทริป</button></li>
+                </ul>
+            </nav>
+        </header>
 
-            <div class="flex justify-around items-center text-center my-4">
-                <div class="flex flex-col items-center p-3 bg-gray-700/50 rounded-lg w-1/3 mx-1">
-                    <p class="text-lg font-bold text-yellow-300" id="template-fuel-consumed"></p>
-                    <p class="text-sm text-gray-300">ลิตรที่ใช้</p>
-                </div>
-                <div class="flex flex-col items-center p-3 bg-gray-700/50 rounded-lg w-1/3 mx-1">
-                    <p class="text-lg font-bold text-green-300" id="template-distance"></p>
-                    <p class="text-sm text-gray-300">ระยะทาง (กม.)</p>
+        <main>
+
+            <!-- Page 1: Summary -->
+            <div id="page-summary" class="page active">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> 
+                    <!-- ปรับ: ค่าใช้จ่ายทั้งหมด (Highlight: แดง) -->
+                    <div class="bg-slate-800 rounded-xl shadow-lg p-6 text-center border-b-4 border-red-600"> 
+                        <h3 class="text-md font-medium text-red-300 mb-2">ค่าใช้จ่ายน้ำมันทั้งหมด</h3>
+                        <p id="summary-total-cost" class="text-4xl font-extrabold text-red-200 animate-pulse">฿0.00</p>
+                    </div>
+                    <!-- ปรับ: ระยะทางรวม (Highlight: เหลือง) -->
+                    <div class="bg-slate-800 rounded-xl shadow-lg p-6 text-center border-b-4 border-amber-600"> 
+                        <h3 class="text-md font-medium text-amber-300 mb-2">ระยะทางรวม</h3>
+                        <p id="summary-total-km" class="text-4xl font-extrabold text-amber-200">0 กม.</p>
+                    </div>
+                    <!-- ปรับ: น้ำมันที่ใช้ไปทั้งหมด (Highlight: น้ำเงิน/รอง) -->
+                    <div class="bg-slate-800 rounded-xl shadow-lg p-6 text-center border-b-4 border-blue-600"> 
+                        <h3 class="text-md font-medium text-blue-300 mb-2">น้ำมันที่ใช้ไปทั้งหมด</h3>
+                        <p id="summary-total-liters" class="text-4xl font-extrabold text-blue-200">0 ลิตร</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="text-center bg-gray-700 p-4 rounded-xl">
-                <p class="text-sm text-gray-300">อัตราสิ้นเปลือง</p>
-                <p class="text-5xl font-black text-white mt-1">
-                    <span id="template-efficiency">--.--</span> 
-                    <span class="text-xl font-bold text-blue-300">กม./ลิตร</span>
-                </p>
+            <!-- Page 2: Add/Edit Trip -->
+            <div id="page-add-trip" class="page">
+                <!-- ปรับ: ใช้ slate-800 และ border-slate-700 -->
+                <div class="bg-slate-800 rounded-xl shadow-2xl p-8 border border-slate-700"> 
+                    <!-- ปรับ: สีน้ำเงิน -->
+                    <h2 id="form-title" class="text-3xl font-bold mb-6 text-blue-300">บันทึกทริปใหม่</h2>
+                    
+                    <!-- ปรับ: สีข้อความแจ้งเตือน (จัดการใน JS ด้วย) -->
+                    <div id="message-box" class="hidden p-4 rounded-lg mb-6 text-center font-medium"></div>
+
+                    <form id="add-trip-form" class="space-y-6">
+                        
+                        <!-- Group 1: Trip Identification -->
+                        <!-- ปรับ: พื้นหลัง slate-700 และ border-slate-600 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-700 p-5 rounded-lg border border-slate-600">
+                            <div class="md:col-span-1">
+                                <label for="trip-name" class="block text-sm font-medium text-slate-300 mb-1">1. ชื่อทริป <span class="text-red-400">*</span></label>
+                                <!-- ปรับ: พื้นหลัง slate-800 และ text-slate-100 -->
+                                <input type="text" id="trip-name" required class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label for="trip-date" class="block text-sm font-medium text-slate-300 mb-1">2. วัน/เวลาเดินทาง <span class="text-red-400">*</span></label>
+                                <input type="datetime-local" id="trip-date" required class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3" style="color-scheme: dark;">
+                            </div>
+                            <div class="md:col-span-1">
+                                <label for="pump-name" class="block text-sm font-medium text-slate-300 mb-1">3. ชื่อปั๊มที่เติม (ไม่บังคับ)</label>
+                                <input type="text" id="pump-name" placeholder="เช่น PTT, บางจาก" class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Fuel Status and Cost -->
+                        <!-- ปรับ: พื้นหลัง slate-700 และ border-slate-600 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 bg-slate-700 p-5 rounded-lg border border-slate-600">
+                            <div class="space-y-1">
+                                <label for="start-liters" class="block text-sm font-medium text-slate-300">4. น้ำมันเริ่มต้น (ลิตร) <span class="text-red-400">*</span></label>
+                                <input type="number" id="start-liters" min="0" step="0.01" required placeholder="เช่น 50.00" class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="end-liters" class="block text-sm font-medium text-slate-300">5. น้ำมันคงเหลือ (ลิตร) <span class="text-red-400">*</span></label>
+                                <input type="number" id="end-liters" min="0" step="0.01" required placeholder="เช่น 35.50" class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="price-per-liter" class="block text-sm font-medium text-slate-300">6. ราคา/ลิตร (บาท) <span class="text-red-400">*</span></label>
+                                <input type="number" id="price-per-liter" min="0" step="0.01" required placeholder="เช่น 38.50" class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                            </div>
+                        </div>
+
+                        <!-- Group 3: Trip Distance -->
+                        <!-- ปรับ: พื้นหลัง slate-700 และ border-slate-600 -->
+                        <div class="bg-slate-700 p-5 rounded-lg border border-slate-600">
+                            <label for="trip-km" class="block text-sm font-medium text-slate-300 mb-1">7. ระยะทางรวมทั้งทริป (กม.) <span class="text-red-400">*</span></label>
+                            <input type="number" id="trip-km" min="0" required placeholder="เช่น 450" class="custom-input mt-1 block w-full bg-slate-800 border-slate-600 text-slate-100 shadow-lg p-3">
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <!-- ปรับ: ใช้สีน้ำเงิน 600 สำหรับปุ่มบันทึก -->
+                        <button type="submit" id="form-submit-btn" class="action-button w-full bg-blue-600 text-white py-3 px-4 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50">
+                            บันทึกทริป
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Page 3: All Trips -->
+            <div id="page-all-trips" class="page">
+                <!-- ปรับ: ใช้ slate-800 และ border-slate-700 -->
+                <div class="bg-slate-800 rounded-xl shadow-2xl p-6 border border-slate-700"> 
+                    <!-- ปรับ: สีน้ำเงิน -->
+                    <h2 class="text-3xl font-bold mb-6 text-blue-300">รายการทริปทั้งหมด</h2>
+                    
+                    <div class="overflow-x-auto rounded-lg">
+                        <!-- ปรับ: ใช้ slate-700 และ slate-800 สำหรับตาราง -->
+                        <table class="min-w-full divide-y divide-slate-700"> 
+                            <thead class="bg-slate-700"> 
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">ชื่อทริป</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">วันที่</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">ระยะทาง (กม.)</th>
+                                    <!-- ปรับ: สีไฮไลท์แดงสำหรับค่าใช้จ่าย -->
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-red-400 uppercase tracking-wider">ค่าใช้จ่าย (บาท)</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trips-list" class="bg-slate-800 divide-y divide-slate-700"> 
+                                <!-- Trip rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal for Trip Details -->
+    <div id="detail-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <!-- ปรับ: ใช้ slate-800 และ border-blue-600 -->
+        <div class="bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg p-6 border border-blue-600 transform transition-all duration-300 scale-95 opacity-0" id="modal-content-area">
+            <div class="flex justify-between items-start mb-4 border-b border-slate-700 pb-3">
+                <!-- ปรับ: สีน้ำเงิน -->
+                <h3 class="text-2xl font-bold text-blue-400">รายละเอียดทริป</h3>
+                <!-- ปรับ: สีแดงเมื่อ hover -->
+                <button id="close-modal-btn" class="text-slate-400 hover:text-red-400 text-3xl leading-none transition duration-150">&times;</button>
             </div>
             
-            <div class="text-center mt-4">
-                <p class="text-sm font-semibold text-green-400" id="template-cost"></p>
-                <p class="text-xs text-gray-500">#TripLog #FuelEfficiency</p>
+            <!-- ปรับ: text-slate-300 -->
+            <div id="detail-content" class="space-y-4 text-slate-300 text-lg">
+                <!-- Details will be loaded here -->
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-700 grid grid-cols-3 gap-3">
+                <!-- ปรับ: สีเขียวสำหรับการ Export -->
+                <button id="export-trip-btn" class="action-button col-span-2 bg-green-600 text-white py-2 hover:bg-green-700 text-sm">
+                    📸 บันทึกเป็นไฟล์ JPEG
+                </button>
+                <!-- ปรับ: สีเหลืองสำหรับการแก้ไข -->
+                <button id="edit-trip-btn" class="action-button bg-amber-600 text-white py-2 hover:bg-amber-700 text-sm">
+                    ✏️ แก้ไข
+                </button>
+                <!-- ปรับ: สีแดงสำหรับการลบ -->
+                <button id="delete-trip-btn" class="action-button bg-red-600 text-white py-2 hover:bg-red-700 text-sm col-span-3">
+                    🗑️ ลบทริปนี้
+                </button>
             </div>
         </div>
     </div>
+    
+    <!-- Hidden Container: เทมเพลตสำหรับสร้างภาพ JPEG (ใช้สไตล์ Dark Mode) -->
+    <div id="export-template-container" class="font-sans">
+        <div class="export-container" id="export-card-content">
+            <!-- ข้อมูลทริปจะถูกใส่ที่นี่ก่อนทำการ capture -->
+        </div>
+    </div>
 
+    <script>
+        // Key สำหรับเก็บข้อมูลใน localStorage
+        const STORAGE_KEY = 'fuelTrips';
 
-    <script type="module">
-        // --- GLOBAL VARIABLES AND CONFIG ---
-        
-        const LOCAL_STORAGE_KEY = 'fuel_trips';
-        
-        // Local state to hold all trips fetched from Local Storage
-        let allTrips = []; 
-        
-        // Gemini API Configuration (KEPT, but no longer depends on Firebase context)
-        // **NOTE: For this feature to work, you must replace the empty string with your actual Gemini API Key.**
-        const apiKey = ""; 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        // ตัวแปรสำหรับสถานะการแก้ไข
+        let currentEditingTripId = null;
 
-
-        // --- DOM ELEMENTS (Cached) ---
-        const messageBox = document.getElementById('message-box');
-        const messageText = document.getElementById('message-text');
-        const submitButton = document.getElementById('submit-button');
-        const cancelButton = document.getElementById('cancel-button');
+        // Element ต่างๆ
+        const pages = document.querySelectorAll('.page');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const addTripForm = document.getElementById('add-trip-form');
         const formTitle = document.getElementById('form-title');
-        const tripListBody = document.getElementById('trip-list');
+        const formSubmitBtn = document.getElementById('form-submit-btn');
+        const tripNameInput = document.getElementById('trip-name');
+        const tripDateInput = document.getElementById('trip-date'); 
+        const pumpNameInput = document.getElementById('pump-name'); // New Input
+        const tripKmInput = document.getElementById('trip-km');
+        const startLitersInput = document.getElementById('start-liters');
+        const endLitersInput = document.getElementById('end-liters');
+        const pricePerLiterInput = document.getElementById('price-per-liter');
+        const messageBox = document.getElementById('message-box');
+        const tripsListBody = document.getElementById('trips-list');
+        const summaryTotalCost = document.getElementById('summary-total-cost');
+        const summaryTotalKm = document.getElementById('summary-total-km');
+        const summaryTotalLiters = document.getElementById('summary-total-liters');
+
+        // Elements Modal
+        const detailModal = document.getElementById('detail-modal');
+        const modalContentArea = document.getElementById('modal-content-area');
+        const detailContent = document.getElementById('detail-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const editTripBtn = document.getElementById('edit-trip-btn');
+        const deleteTripBtn = document.getElementById('delete-trip-btn');
+        const exportTripBtn = document.getElementById('export-trip-btn');
         
-        // Modal Details elements
-        const detailsModal = document.getElementById('details-modal');
-        const detailsTitle = document.getElementById('details-title');
-        const detailsGrid = document.getElementById('details-grid');
-        const modalCreateImageButton = document.getElementById('modal-create-image-button'); 
-        const modalEditButton = document.getElementById('modal-edit-button');
-        const modalDeleteButton = document.getElementById('modal-delete-button');
+        // Element สำหรับ Export Image
+        const exportCardContent = document.getElementById('export-card-content');
 
-        // AI elements
-        const analysisModal = document.getElementById('analysis-modal');
-        const analysisContent = document.getElementById('analysis-content');
-        const modalAnalyzeButton = document.getElementById('modal-analyze-button'); 
 
-        
-        // --- FORMATTING HELPERS ---
-        const formatNum = (num) => parseFloat(num).toFixed(2);
-        const formatDistance = (num) => parseInt(num).toLocaleString('th-TH');
-        const formatDateDisplay = (dateString) => new Date(dateString).toLocaleString('th-TH', { 
-            year: 'numeric', month: 'short', day: 'numeric', 
-            hour: '2-digit', minute: '2-digit', hour12: false 
-        }).replace(',', ' ');
-        const formatCurrency = (num) => parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-        // --- MESSAGE HANDLERS ---
-
-        function showMessage(text) {
-            messageText.textContent = text;
-            document.getElementById('alert-actions').classList.remove('hidden');
-            document.getElementById('confirm-actions').classList.add('hidden');
-            messageBox.classList.remove('hidden');
-            messageBox.classList.add('flex');
+        /**
+         * Function: สร้างสตริงวันที่/เวลาปัจจุบันในรูปแบบที่ input type="datetime-local" ต้องการ (YYYY-MM-DDThh:mm)
+         */
+        function getCurrentDateTimeLocal() {
+            const now = new Date();
+            // Offset เป็นนาที เพื่อให้ได้เวลาท้องถิ่น
+            const offset = now.getTimezoneOffset() * 60000;
+            // สร้าง Date object ที่ปรับเป็นเวลาท้องถิ่นแล้ว
+            const localDate = new Date(now.getTime() - offset);
+            // แปลงเป็น ISO String และตัดให้เหลือแค่ YYYY-MM-DDThh:mm
+            return localDate.toISOString().slice(0, 16);
         }
 
-        function showConfirm(text, callback) {
-            messageText.textContent = text;
-            document.getElementById('alert-actions').classList.add('hidden');
-            document.getElementById('confirm-actions').classList.remove('hidden');
-            messageBox.classList.remove('hidden');
-            messageBox.classList.add('flex');
-
-            document.getElementById('confirm-yes').onclick = () => {
-                messageBox.classList.add('hidden');
-                callback(true);
-            };
-            document.getElementById('confirm-no').onclick = () => {
-                messageBox.classList.add('hidden');
-                callback(false);
-            };
-        }
-
-
-        // --- LOCAL STORAGE HANDLERS (New) ---
-        
-        function loadTripsFromLocalStorage() {
-            try {
-                const json = localStorage.getItem(LOCAL_STORAGE_KEY);
-                return json ? JSON.parse(json) : [];
-            } catch (error) {
-                console.error("Error loading from local storage:", error);
-                return [];
-            }
-        }
-        
-        function saveTripsToLocalStorage(trips) {
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(trips));
-                // Reload and display data immediately to simulate real-time update
-                displayTrips(loadTripsFromLocalStorage());
-            } catch (error) {
-                console.error("Error saving to local storage:", error);
-                showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล: พื้นที่จัดเก็บเต็มหรือไม่ได้รับอนุญาต");
-            }
-        }
-
-        function saveTrip(tripData) {
-            const trips = loadTripsFromLocalStorage();
-            const now = new Date().toISOString();
+        // Function: แสดงหน้า (Page) ที่เลือก
+        function showPage(pageId) {
+            // ซ่อนทุกหน้า
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
             
-            if (tripData.id) {
-                // Update existing trip
-                const index = trips.findIndex(t => t.id === tripData.id);
-                if (index > -1) {
-                    trips[index] = { ...tripData, timestamp: trips[index].timestamp || now }; // Keep original timestamp
-                    showMessage(`บันทึกการแก้ไขทริป "${tripData.tripName}" สำเร็จ!`);
-                } else {
-                     showMessage(`ไม่พบบันทึกทริปสำหรับแก้ไข`);
-                }
+            // สร้าง ID ที่ถูกต้องโดยการเติม 'page-'
+            const targetPageId = 'page-' + pageId;
+            
+            // แสดงหน้าเป้าหมาย
+            const targetPage = document.getElementById(targetPageId);
+            
+            if (targetPage) {
+                targetPage.classList.add('active');
             } else {
-                // Create new trip: Generate a simple unique ID (timestamp + random)
-                const newId = now + Math.random().toString(36).substring(2, 9);
-                trips.push({ ...tripData, id: newId, timestamp: now });
-                showMessage(`บันทึกทริปใหม่ "${tripData.tripName}" สำเร็จ!`);
+                console.error("ไม่พบหน้าที่ต้องการแสดง:", targetPageId);
             }
 
-            saveTripsToLocalStorage(trips);
-            resetForm();
-        }
-
-        function deleteTrip(id) {
-            showConfirm("คุณแน่ใจหรือไม่ว่าต้องการลบทริปนี้?", (confirmed) => {
-                if (!confirmed) return;
-                
-                let trips = loadTripsFromLocalStorage();
-                const initialLength = trips.length;
-                trips = trips.filter(t => t.id !== id);
-                
-                if (trips.length < initialLength) {
-                    saveTripsToLocalStorage(trips);
-                    showMessage("ลบบันทึกทริปเรียบร้อยแล้ว");
-                    detailsModal.classList.add('hidden');
-                } else {
-                    showMessage("ไม่พบบันทึกที่ต้องการลบ");
-                }
+            // อัปเดตสไตล์ของ Nav Links
+            navLinks.forEach(link => {
+                const isCurrentPage = link.getAttribute('data-page') === pageId;
+                // ปรับ: สีนำทางหลักเป็นน้ำเงิน
+                link.classList.toggle('text-blue-400', isCurrentPage);
+                link.classList.toggle('border-b-2', isCurrentPage);
+                link.classList.toggle('border-blue-400', isCurrentPage);
+                link.classList.toggle('text-slate-400', !isCurrentPage);
+                link.classList.toggle('hover:text-blue-400', !isCurrentPage);
             });
         }
 
-
-        // --- UTILITY: EXPONENTIAL BACKOFF FOR API CALLS (Kept for AI feature) ---
-        async function fetchLLMResponse(payload, retries = 3) {
-            if (!apiKey) {
-                throw new Error("Gemini API Key is missing. Please set the apiKey variable.");
-            }
-
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.status === 429 && i < retries - 1) {
-                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-                        console.warn(`Rate limit hit. Retrying in ${delay.toFixed(0)}ms...`);
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        continue;
-                    }
-
-                    if (!response.ok) {
-                        const errorBody = await response.json();
-                        throw new Error(`HTTP error! status: ${response.status}. Details: ${errorBody.error.message}`);
-                    }
-
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                    if (text) {
-                        return text;
-                    } else {
-                        throw new Error("No content received from Gemini API.");
-                    }
-
-                } catch (error) {
-                    console.error("Gemini API call failed:", error);
-                    if (i === retries - 1) throw error; 
-                }
-            }
+        // Function: โหลดข้อมูลทริปจาก localStorage
+        function getTrips() {
+            const trips = localStorage.getItem(STORAGE_KEY);
+            return trips ? JSON.parse(trips) : [];
         }
 
-        // --- LLM FEATURE: TRIP ANALYSIS (Kept for AI feature) ---
-        async function analyzeTripWithGemini(trip) {
-            if (!apiKey) {
-                showMessage("❌ ไม่สามารถวิเคราะห์ได้: ต้องใส่ Gemini API Key ในโค้ดก่อน");
-                return;
-            }
-
-            // 1. Prepare UI for loading
-            detailsModal.classList.add('hidden'); // Hide details modal
-            analysisModal.classList.remove('hidden');
-            analysisModal.classList.add('flex');
-            analysisContent.innerHTML = `
-                <div class="text-center py-6">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-3"></div>
-                    <p class="text-gray-400">กำลังวิเคราะห์ข้อมูลทริป... กรุณารอสักครู่</p>
-                </div>
-            `;
-
-            // 2. Construct Prompt
-            const prompt = `
-                Act as a friendly and insightful travel and efficiency analyst. Analyze the following trip data. 
-                Your response must be in Thai.
-                
-                Data:
-                - Trip Name: ${trip.tripName}
-                - Date: ${new Date(trip.tripDate).toLocaleDateString('th-TH')}
-                - Distance: ${trip.totalDistance} km
-                - Fuel Consumed: ${formatNum(trip.fuelConsumed)} liters
-                - Fuel Efficiency: ${formatNum(trip.fuelEfficiency)} km/liter
-                - Total Cost: ${formatCurrency(trip.totalFuelCost)} Baht
-
-                Provide a concise, single-paragraph summary of the trip's performance, highlighting the fuel efficiency (km/liter). Then, give one specific, actionable tip for improving fuel efficiency or one useful travel insight based on the trip's performance. Format the tip clearly with a bold heading.
-            `;
-            
-            // 3. Construct Payload
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: {
-                    parts: [{ text: "You are a helpful travel and fuel efficiency analyst. Provide concise, friendly, and accurate analysis in Thai." }]
-                },
-            };
-
-            // 4. Call API and handle response
-            try {
-                const analysisText = await fetchLLMResponse(payload);
-                
-                // Convert simple Markdown output to HTML for display
-                const htmlContent = analysisText
-                    .replace(/\*\*(.*?)\*\*/g, (match, p1) => `<span class="font-bold text-blue-300">${p1}</span>`) // Convert **text** to bold
-                    .replace(/\n\n/g, '<p class="mt-4">') // Double newline to paragraph
-                    .replace(/\n/g, '<br>'); // Single newline to break
-                    
-
-                analysisContent.innerHTML = `<div class="p-3 bg-gray-700 rounded-lg">${htmlContent}</div>`;
-                
-            } catch (error) {
-                console.error("Error during trip analysis:", error);
-                analysisContent.innerHTML = `
-                    <p class="text-red-400">❌ ไม่สามารถทำการวิเคราะห์ได้ในขณะนี้</p>
-                    <p class="text-sm text-gray-500 mt-2">โปรดลองอีกครั้งในภายหลัง หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต: ${error.message}</p>
-                `;
-            }
+        // Function: บันทึกข้อมูลทริปไป localStorage
+        function saveTrips(trips) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(trips));
         }
 
-
-        // --- UI & MODAL FUNCTIONS ---
-
-        function createPostImage(trip) {
-            detailsModal.classList.add('hidden'); // Hide the details modal first
+        // Function: แสดงข้อความ (แทน alert)
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden');
+            // ลบสีเดิมออกก่อน
+            messageBox.classList.remove('bg-green-800', 'text-green-100', 'bg-red-800', 'text-red-100');
             
-            // 1. Get template elements
-            const templateArea = document.getElementById('image-capture-area');
-            const templateContainer = document.getElementById('post-image-template');
-
-            // 2. Populate template with trip data
-            document.getElementById('template-trip-name').textContent = trip.tripName;
-            document.getElementById('template-trip-date').textContent = `บันทึกเมื่อ: ${formatDateDisplay(trip.tripDate)}`;
-            document.getElementById('template-fuel-consumed').textContent = formatNum(trip.fuelConsumed);
-            document.getElementById('template-distance').textContent = formatDistance(trip.totalDistance);
-            document.getElementById('template-efficiency').textContent = formatNum(trip.fuelEfficiency);
-            document.getElementById('template-cost').textContent = `💸 ค่าใช้จ่ายรวม: ${formatCurrency(trip.totalFuelCost)} บาท`;
-            
-            // 3. Make template temporarily visible (still outside viewport)
-            templateContainer.classList.remove('-z-50', 'opacity-0');
-            templateContainer.classList.add('z-50');
-
-            // 4. Use html2canvas to capture the element
-            showMessage('กำลังสร้างรูปภาพ... กรุณารอสักครู่');
-            
-            // Use setTimeout to ensure the DOM has updated before capture
-            setTimeout(() => {
-                html2canvas(templateArea, {
-                    allowTaint: true,
-                    useCORS: true,
-                    scale: 2 // Higher scale for better resolution
-                }).then(canvas => {
-                    // Hide template again
-                    templateContainer.classList.add('-z-50', 'opacity-0');
-                    templateContainer.classList.remove('z-50');
-                    messageBox.classList.add('hidden');
-
-                    // Open the image in a new tab for saving/sharing
-                    const imgData = canvas.toDataURL('image/png');
-                    const newWindow = window.open();
-                    
-                    // Display image and instructions in the new window
-                    newWindow.document.write(`
-                        <html>
-                        <head><title>รูปภาพโพสต์ทริป - ${trip.tripName}</title>
-                        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700&display=swap" rel="stylesheet">
-                        <style>
-                            body { 
-                                margin: 0; 
-                                background-color: #1f2937; 
-                                display: flex; 
-                                flex-direction: column;
-                                justify-content: center; 
-                                align-items: center; 
-                                min-height: 100vh;
-                                font-family: 'Noto Sans Thai', sans-serif;
-                                color: white;
-                                padding: 1rem;
-                            }
-                        </style>
-                        </head>
-                        <body>
-                            <p style="margin-bottom: 1rem; font-size: 1.2rem; text-align: center; font-weight: 600;">คลิกขวา (หรือกดค้างสำหรับมือถือ) ที่รูป เพื่อบันทึกหรือแชร์</p>
-                            <img src="${imgData}" alt="Trip Post Image" style="max-width: 90%; max-height: 80vh; border: 4px solid #3b82f6; border-radius: 1rem;"/>
-                        </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
-
-                    showMessage("สร้างรูปภาพสำเร็จ! รูปภาพจะเปิดในแท็บใหม่เพื่อให้คุณบันทึกหรือแชร์ได้ค่ะ");
-
-                }).catch(error => {
-                    console.error("Error creating image:", error);
-                    templateContainer.classList.add('-z-50', 'opacity-0');
-                    templateContainer.classList.remove('z-50');
-                    showMessage("เกิดข้อผิดพลาดในการสร้างรูปภาพ: " + error.message);
-                });
-            }, 50); // Small delay to ensure template rendering
-
-        }
-
-        function editTrip(id) {
-            const trip = allTrips.find(t => t.id === id); // Use allTrips global state
-
-            if (trip) {
-                detailsModal.classList.add('hidden');
-                
-                // Only take the first 16 characters for datetime-local format
-                const formattedDate = trip.tripDate.substring(0, 16);
-
-                document.getElementById('tripId').value = trip.id;
-                document.getElementById('tripName').value = trip.tripName;
-                document.getElementById('tripDate').value = formattedDate;
-                document.getElementById('totalDistance').value = trip.totalDistance;
-                document.getElementById('startFuelLiters').value = trip.startFuelLiters;
-                document.getElementById('endFuelLiters').value = trip.endFuelLiters;
-                document.getElementById('totalFuelCost').value = trip.totalFuelCost;
-                
-                formTitle.textContent = 'กำลังแก้ไข: ' + trip.tripName;
-                submitButton.textContent = 'บันทึกการแก้ไข';
-                cancelButton.classList.remove('hidden');
-
-                document.getElementById('trip-form').scrollIntoView({ behavior: 'smooth' });
+            if (type === 'success') {
+                // Dark Mode: สีข้อความสำเร็จ (เขียว)
+                messageBox.classList.add('bg-emerald-800', 'text-emerald-100');
             } else {
-                showMessage("ไม่พบบันทึกที่ต้องการแก้ไข");
+                // Dark Mode: สีข้อความผิดพลาด (แดง)
+                messageBox.classList.add('bg-red-800', 'text-red-100');
             }
         }
 
-        window.resetForm = function() {
-            document.getElementById('trip-form').reset();
-            document.getElementById('tripId').value = '';
-            
-            formTitle.textContent = 'บันทึกทริปใหม่';
-            submitButton.textContent = 'บันทึกข้อมูลทริป';
-            cancelButton.classList.add('hidden');
-            
-            // Set default date to current datetime
-            document.getElementById('tripDate').value = new Date().toISOString().substring(0, 16);
+        // Function: ซ่อนข้อความ
+        function hideMessage() {
+            messageBox.classList.add('hidden');
         }
 
-        function showTripDetails(id) {
-            const trip = allTrips.find(t => t.id === id); // Use allTrips global state
+        // Function: แสดงผลรายการทริปทั้งหมด (หน้า 3)
+        function renderAllTrips() {
+            const trips = getTrips();
+            // เรียงลำดับจากใหม่ไปเก่า
+            trips.sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            if (!trip) {
-                showMessage("ไม่พบบันทึกทริป");
-                return;
-            }
-            
-            // 1. Set Title
-            detailsTitle.textContent = trip.tripName;
-            
-            // 2. Populate Details Grid
-            detailsGrid.innerHTML = `
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">วัน/เวลา:</span> ${formatDateDisplay(trip.tripDate)}</div>
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ระยะทางรวม:</span> ${formatDistance(trip.totalDistance)} กม.</div>
-                
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ลิตรเริ่มต้น:</span> ${formatNum(trip.startFuelLiters)} ลิตร</div>
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ลิตรสิ้นสุด:</span> ${formatNum(trip.endFuelLiters)} ลิตร</div>
-
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">น้ำมันที่ใช้:</span> <span class="text-yellow-400 font-bold">${formatNum(trip.fuelConsumed)} ลิตร</span></div>
-                <div class="col-span-2 sm:col-span-1"><span class="font-semibold text-gray-400">ประสิทธิภาพ:</span> <span class="text-blue-400 font-bold">${formatNum(trip.fuelEfficiency)} กม./ลิตร</span></div>
-
-                <div class="col-span-2"><span class="font-semibold text-gray-400">ค่าใช้จ่ายรวม:</span> <span class="text-green-400 font-bold">${formatCurrency(trip.totalFuelCost)} บาท</span></div>
-            `;
-            
-            // 3. Attach actions to modal buttons
-            modalAnalyzeButton.onclick = () => analyzeTripWithGemini(trip); 
-            modalCreateImageButton.onclick = () => createPostImage(trip); 
-            modalEditButton.onclick = () => editTrip(trip.id);
-            modalDeleteButton.onclick = () => deleteTrip(trip.id); // Use new delete function
-
-            // 4. Show Modal
-            detailsModal.classList.remove('hidden');
-            detailsModal.classList.add('flex');
-        }
-        
-        // Display the list of trips in the table
-        function displayTrips(trips) {
-            // Sort by timestamp (most recent first) locally
-            trips.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            allTrips = trips; // Update global state
-            
-            tripListBody.innerHTML = '';
+            tripsListBody.innerHTML = ''; // เคลียร์ของเก่า
 
             if (trips.length === 0) {
-                tripListBody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-sm text-gray-400">ไม่มีบันทึกการเดินทาง</td></tr>`; 
+                // ปรับ: ใช้ slate-500
+                tripsListBody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">คุณยังไม่มีข้อมูลการเดินทางที่บันทึกไว้</td></tr>';
                 return;
             }
-            
+
             trips.forEach(trip => {
+                // ต้องจัดการกรณีที่ pumpName ไม่มีอยู่ (สำหรับข้อมูลทริปเก่าที่ไม่มี field นี้)
+                const pumpInfo = trip.pumpName ? `(${trip.pumpName})` : '';
+
+                const litersUsed = trip.startLiters - trip.endLiters;
+                const totalCost = litersUsed * trip.pricePerLiter;
+
+                // จัดรูปแบบวันที่
+                const tripDate = new Date(trip.date);
+                const formattedDate = tripDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-700 transition duration-150';
-                row.setAttribute('data-id', trip.id);
-                row.onclick = () => showTripDetails(trip.id);
-                
+                // ปรับ: hover:bg-slate-700
+                row.className = 'hover:bg-slate-700 transition duration-150';
                 row.innerHTML = `
-                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-100">${trip.tripName}</td>
-                    <td class="px-3 py-4 whitespace-nowrap text-xs text-gray-400">${formatDateDisplay(trip.tripDate)}</td>
-                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-300 text-right">${formatDistance(trip.totalDistance)}</td>
-                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-300 text-right">${formatNum(trip.fuelConsumed)}</td>
-                    <td class="px-3 py-4 whitespace-nowrap text-sm text-blue-400 font-semibold text-right">${formatNum(trip.fuelEfficiency)}</td>
+                    <!-- ปรับ: text-slate-100, text-slate-500 -->
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-100 font-medium">${trip.name} <span class="text-xs text-slate-500">${pumpInfo}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-300 text-sm">${formattedDate}</td>
+                    <!-- ปรับ: text-amber-400 (เหลือง) สำหรับระยะทาง -->
+                    <td class="px-6 py-4 whitespace-nowrap text-amber-400 font-semibold">${trip.km.toFixed(0)}</td>
+                    <!-- ปรับ: text-red-400 (แดง) สำหรับค่าใช้จ่าย -->
+                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-red-400">฿${totalCost.toFixed(2)}</td>
+                    <!-- ปรับ: bg-blue-600 (น้ำเงิน) สำหรับปุ่มดูรายละเอียด -->
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <button onclick="viewDetails(${trip.id})" class="bg-blue-600 text-white px-3 py-1 text-xs rounded-full hover:bg-blue-700 transition duration-150 shadow-md">ดูรายละเอียด</button>
+                    </td>
                 `;
-                tripListBody.appendChild(row);
+                tripsListBody.appendChild(row);
             });
         }
 
-
-        // --- EVENT LISTENERS (TRIP FORM) ---
-
-        document.getElementById('trip-form').addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Function: คำนวณและแสดงผลสรุป (หน้า 1)
+        function renderSummary() {
+            const trips = getTrips();
             
-            const id = document.getElementById('tripId').value || null; 
-            const tripName = document.getElementById('tripName').value.trim();
-            const tripDate = document.getElementById('tripDate').value;
-            // Use Number() for explicit conversion before calculation
-            const totalDistance = Number(document.getElementById('totalDistance').value); 
-            const startFuelLiters = Number(document.getElementById('startFuelLiters').value); 
-            const endFuelLiters = Number(document.getElementById('endFuelLiters').value); 
-            const totalFuelCost = Number(document.getElementById('totalFuelCost').value); 
+            let totalCost = 0;
+            let totalKm = 0;
+            let totalLitersUsed = 0;
 
-            // Validation
-            if (startFuelLiters < endFuelLiters) {
-                showMessage("ลิตรน้ำมันเริ่มต้นต้องมากกว่าหรือเท่ากับลิตรน้ำมันสิ้นสุด!");
+            trips.forEach(trip => {
+                const litersUsed = trip.startLiters - trip.endLiters;
+                totalCost += litersUsed * trip.pricePerLiter;
+                totalKm += trip.km;
+                totalLitersUsed += litersUsed;
+            });
+
+            summaryTotalCost.textContent = `฿${totalCost.toFixed(2)}`;
+            summaryTotalKm.textContent = `${totalKm.toFixed(2)} กม.`;
+            summaryTotalLiters.textContent = `${totalLitersUsed.toFixed(2)} ลิตร`;
+        }
+
+        // Function: เปิด/ปิด Modal พร้อม Transition
+        function toggleModal(show) {
+            if (show) {
+                detailModal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalContentArea.classList.remove('scale-95', 'opacity-0');
+                    modalContentArea.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            } else {
+                modalContentArea.classList.remove('scale-100', 'opacity-100');
+                modalContentArea.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    detailModal.classList.add('hidden');
+                }, 300); // ต้องรอให้ Transition เสร็จสิ้น
+            }
+        }
+
+        // Function: แสดง Modal รายละเอียดทริป
+        window.viewDetails = function(id) {
+            const trips = getTrips();
+            // ค้นหาทริปจาก ID
+            const trip = trips.find(t => t.id === id);
+
+            if (!trip) {
+                showMessage('ไม่พบข้อมูลทริปที่ต้องการ', 'error');
                 return;
             }
-            if (totalDistance <= 0 || totalFuelCost < 0) { 
-                showMessage("ระยะทางรวมต้องมากกว่าศูนย์! (ค่าใช้จ่ายรวมต้องไม่ติดลบ)");
+
+            // คำนวณค่าต่างๆ
+            const litersUsed = trip.startLiters - trip.endLiters;
+            const totalCost = litersUsed * trip.pricePerLiter;
+            // ป้องกันการหารด้วยศูนย์
+            const fuelConsumption = litersUsed > 0 ? trip.km / litersUsed : 0; 
+            
+            // จัดรูปแบบวันที่
+            const tripDate = new Date(trip.date);
+            const formattedDate = tripDate.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // ตรวจสอบชื่อปั๊ม (ใช้ค่าว่างถ้าไม่มี)
+            const pumpNameDisplay = trip.pumpName || '-';
+
+            detailContent.innerHTML = `
+                <div class="space-y-3">
+                    <!-- ปรับ: สีน้ำเงินสำหรับหัวข้อ -->
+                    <p><strong class="text-blue-300">ชื่อทริป:</strong> ${trip.name}</p>
+                    <p><strong class="text-blue-300">ชื่อปั๊มที่เติม:</strong> ${pumpNameDisplay}</p> <!-- Display Pump Name -->
+                    <p><strong class="text-blue-300">วัน/เวลา:</strong> ${formattedDate}</p>
+                    <!-- ปรับ: สีเหลืองสำหรับระยะทาง -->
+                    <p><strong class="text-blue-300">ระยะทางรวม:</strong> <span class="text-amber-300 font-semibold">${trip.km.toFixed(0)}</span> กม.</p>
+                    <p><strong class="text-blue-300">น้ำมันเริ่มต้น:</strong> ${trip.startLiters.toFixed(2)} ลิตร</p>
+                    <p><strong class="text-blue-300">น้ำมันคงเหลือ:</strong> ${trip.endLiters.toFixed(2)} ลิตร</p>
+                    <p><strong class="text-blue-300">ราคาน้ำมัน/ลิตร:</strong> ฿${trip.pricePerLiter.toFixed(2)}</p>
+                </div>
+
+                <!-- ปรับ: ใช้ slate-700 และ border-amber-500 (เหลือง) สำหรับอัตราสิ้นเปลือง -->
+                <div class="mt-4 p-4 bg-slate-700 rounded-lg border-l-4 border-amber-500">
+                    <p class="font-bold text-lg text-amber-300">อัตราสิ้นเปลือง:</p>
+                    <p class="text-xl font-bold">${fuelConsumption.toFixed(2)} กม./ลิตร</p>
+                </div>
+
+                <!-- ปรับ: ใช้ bg-red-900 bg-opacity-30 และ border-red-500 (แดง) สำหรับค่าใช้จ่าย -->
+                <div class="p-4 bg-red-900 bg-opacity-30 rounded-lg border-l-4 border-red-500">
+                    <p class="font-bold text-lg text-red-300">น้ำมันที่ใช้ไป/ค่าใช้จ่าย:</p>
+                    <p class="text-xl font-bold">${litersUsed.toFixed(2)} ลิตร</p>
+                    <p class="text-3xl font-extrabold text-red-400 mt-1">฿${totalCost.toFixed(2)}</p>
+                </div>
+            `;
+
+            // ตั้งค่า Event Listener สำหรับปุ่มใน Modal โดยส่ง ID ทริปไปด้วย
+            editTripBtn.onclick = () => startEdit(id);
+            deleteTripBtn.onclick = () => deleteTrip(id);
+            // ผูกฟังก์ชัน export ใหม่เข้ากับปุ่ม
+            exportTripBtn.onclick = () => exportTripDetails(trip);
+
+            toggleModal(true); // ใช้ฟังก์ชัน Modal ใหม่
+        }
+        
+        // Function: ซ่อน Modal
+        function hideDetails() {
+            toggleModal(false);
+        }
+
+        // Function: ลบทริป
+        window.deleteTrip = function(id) {
+            // ใช้ custom modal แทน confirm()
+            // เนื่องจากข้อจำกัดของ iFrame จะใช้ window.confirm() แบบง่ายแทนการสร้าง modal UI ที่ซับซ้อน
+            if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบทริปนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้")) {
+                const trips = getTrips();
+                // ใช้ filter เพื่อสร้าง Array ใหม่ที่ไม่รวมทริปที่มี ID ตรงกัน
+                const updatedTrips = trips.filter(t => t.id !== id);
+                saveTrips(updatedTrips);
+
+                showMessage('ลบทริปเรียบร้อยแล้ว!', 'success');
+                hideDetails(); // ปิด Modal
+                updateAllData(); // อัปเดตข้อมูลและหน้าจอ
+            }
+        }
+        
+        // Function: เริ่มต้นการแก้ไข (นำไปหน้าบันทึก)
+        window.startEdit = function(id) {
+            const trips = getTrips();
+            const trip = trips.find(t => t.id === id);
+
+            if (!trip) {
+                showMessage('ไม่พบข้อมูลทริปที่ต้องการแก้ไข', 'error');
                 return;
             }
 
-            // Calculations
-            const fuelConsumed = startFuelLiters - endFuelLiters;
+            // ตั้งค่าสถานะการแก้ไข
+            currentEditingTripId = id;
+
+            // เติมข้อมูลลงในฟอร์ม
+            tripNameInput.value = trip.name;
+            // ใช้ค่าที่บันทึกไว้ใน LocalStorage (ซึ่งเป็น ISO String อยู่แล้ว)
+            tripDateInput.value = trip.date.slice(0, 16); 
+            // เติมชื่อปั๊ม (ถ้ามี)
+            pumpNameInput.value = trip.pumpName || ''; 
             
-            if (fuelConsumed <= 0) {
-                showMessage("ปริมาณน้ำมันที่ใช้ต้องมากกว่าศูนย์! (ลิตรเริ่มต้น > ลิตรสิ้นสุด)");
+            tripKmInput.value = trip.km;
+            startLitersInput.value = trip.startLiters;
+            endLitersInput.value = trip.endLiters;
+            pricePerLiterInput.value = trip.pricePerLiter;
+
+            // อัปเดต UI ของฟอร์ม
+            formTitle.textContent = '✏️ แก้ไขทริป: ' + trip.name;
+            formSubmitBtn.textContent = 'อัปเดตทริป';
+            // ปรับ: ใช้สีเหลือง (amber) สำหรับปุ่มแก้ไข
+            formSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            formSubmitBtn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+            
+            // นำไปหน้าบันทึก
+            hideDetails();
+            showPage('add-trip');
+            hideMessage();
+        }
+        
+        // Function: รีเซ็ต UI ฟอร์มกลับสู่โหมด "บันทึกใหม่"
+        function resetFormUI() {
+            currentEditingTripId = null;
+            formTitle.textContent = 'บันทึกทริปใหม่';
+            formSubmitBtn.textContent = 'บันทึกทริป';
+            // ปรับ: ใช้สีน้ำเงิน (blue) สำหรับปุ่มบันทึกใหม่
+            formSubmitBtn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+            formSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
+
+
+        /**
+         * Function: สร้างไฟล์ JPEG จากรายละเอียดทริป
+         * (ใช้ html2canvas ในการแปลง DOM เป็น Canvas แล้วแปลงเป็น JPEG)
+         */
+        window.exportTripDetails = async function(trip) {
+            hideDetails();
+            showMessage('กำลังสร้างไฟล์ JPEG...', 'success');
+
+            const litersUsed = trip.startLiters - trip.endLiters;
+            const totalCost = litersUsed * trip.pricePerLiter;
+            // ป้องกันการหารด้วยศูนย์
+            const fuelConsumption = litersUsed > 0 ? trip.km / litersUsed : 0; 
+            
+            const tripDate = new Date(trip.date);
+            const formattedDate = tripDate.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // ตรวจสอบชื่อปั๊ม (ใช้ค่าว่างถ้าไม่มี)
+            const pumpNameDisplay = trip.pumpName ? trip.pumpName : '-';
+            const pumpEmoji = trip.pumpName ? '⛽️' : '📍';
+
+
+            // 1. สร้าง HTML ภายในเทมเพลตที่ซ่อนไว้สำหรับจับภาพ
+            // ปรับ: ใช้ Tailwind classes/สไตล์อินไลน์ตามโทนสีใหม่
+            exportCardContent.className = 'export-container p-8 text-slate-100'; 
+            exportCardContent.style.backgroundColor = '#1E293B'; // slate-800
+            exportCardContent.style.borderRadius = '16px';
+            exportCardContent.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.6)';
+            exportCardContent.style.border = '2px solid #334155'; // slate-700
+
+            // IMPORTANT: กำหนด font-family ใน template ให้ตรงกับ font ที่โหลดมา
+            exportCardContent.innerHTML = `
+                <div style="font-family: 'IBM Plex Sans Thai', sans-serif;">
+                    <!-- ปรับ: สีน้ำเงินสำหรับหัวข้อหลัก -->
+                    <h1 style="font-size: 2.5em; color: #3B82F6; text-align: center; margin-bottom: 20px; border-bottom: 3px solid #3B82F6; padding-bottom: 10px; font-weight: 700;">
+                        🚗 รายงานค่าน้ำมัน: ${trip.name}
+                    </h1>
+                    
+                    <!-- ปรับ: พื้นหลัง slate-900 -->
+                    <div style="margin-top: 20px; padding: 15px; border-radius: 10px; background-color: #0F172A;">
+                        
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #94A3B8;">วันที่/เวลา:</span>
+                            <span style="font-weight: 600;">${formattedDate}</span>
+                        </div>
+                        
+                        <!-- ปรับ: สีเหลืองสำหรับชื่อปั๊ม -->
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
+                            <span style="color: #94A3B8;">${pumpEmoji} ปั๊มที่เติม:</span>
+                            <span style="font-weight: 600; color: #F59E0B;">${pumpNameDisplay}</span>
+                        </div>
+
+                        <!-- ปรับ: สีเหลืองสำหรับระยะทาง -->
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; margin-top: 15px;">
+                            <span style="color: #94A3B8;">ระยะทางรวม:</span>
+                            <span style="font-weight: 600; color: #F59E0B;">${trip.km.toFixed(0)} กม.</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #94A3B8;">น้ำมันเริ่มต้น - คงเหลือ:</span>
+                            <span style="font-weight: 600;">${trip.startLiters.toFixed(2)} L - ${trip.endLiters.toFixed(2)} L</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: #94A3B8;">ราคาน้ำมัน/ลิตร:</span>
+                            <span style="font-weight: 600;">฿${trip.pricePerLiter.toFixed(2)}</span>
+                        </div>
+                        
+                        <!-- ปรับ: สีเขียวสำหรับอัตราสิ้นเปลือง (เป็นค่าบวก) -->
+                        <div style="display: flex; justify-content: space-between; margin-top: 20px; padding-top: 10px; border-top: 1px solid #334155;">
+                            <span style="color: #10B981; font-weight: 700;">อัตราสิ้นเปลือง:</span>
+                            <span style="color: #10B981; font-weight: 700; font-size: 1.2em;">${fuelConsumption.toFixed(2)} กม./ลิตร</span>
+                        </div>
+                    </div>
+
+                    <!-- ปรับ: สีน้ำเงินเข้มสำหรับกล่องสรุปค่าใช้จ่าย -->
+                    <div style="background-color: #1D4ED8; border-radius: 10px; padding: 25px; margin-top: 30px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);">
+                        <h2 style="font-size: 1.5em; color: #DBEAFE; margin-bottom: 10px; font-weight: 700;">💰 ค่าใช้จ่ายเชื้อเพลิงรวม</h2>
+                        <!-- ปรับ: สีแดงสำหรับไฮไลท์ค่าใช้จ่าย -->
+                        <p style="color: #F87171; font-size: 3.5em; font-weight: 700; line-height: 1.2;">฿${totalCost.toFixed(2)}</p>
+                        <!-- ปรับ: สีเหลืองสำหรับปริมาณน้ำมันที่ใช้ -->
+                        <p style="color: #FBBF24; font-size: 1.3em; font-weight: 600; margin-top: 5px;">(${litersUsed.toFixed(2)} ลิตรที่ใช้ไป)</p>
+                    </div>
+                </div>
+            `;
+            
+            // 2. เรียกใช้ html2canvas
+            try {
+                const canvas = await html2canvas(document.getElementById('export-card-content'), {
+                    // ปรับขนาดเพื่อรองรับ Retina Display และให้ภาพคมชัด
+                    scale: 2, 
+                    // สำคัญ: ต้องใส่สีพื้นหลังเพื่อให้ภาพไม่โปร่งใส
+                    backgroundColor: '#0F172A', 
+                    useCORS: true 
+                });
+
+                // 3. แปลง Canvas เป็น Data URL ในรูปแบบ JPEG (คุณภาพ 90%)
+                const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+                // 4. สร้าง Link และสั่งดาวน์โหลด
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = `FuelTrip_Report_${trip.name.replace(/\s/g, '_')}_${trip.id}.jpeg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showMessage('✅ บันทึกไฟล์ JPEG เรียบร้อยแล้ว!', 'success');
+
+            } catch (error) {
+                console.error("Error generating image:", error);
+                showMessage('❌ เกิดข้อผิดพลาดในการสร้างไฟล์ภาพ', 'error');
+            }
+            
+            // ซ่อนข้อความแจ้งเตือนหลังเสร็จสิ้น
+            setTimeout(hideMessage, 3000);
+        }
+
+        // Function: จัดการการ Submit ฟอร์ม (หน้า 2)
+        function handleFormSubmit(event) {
+            event.preventDefault(); // ป้องกันหน้าโหลดใหม่
+            hideMessage();
+
+            // ดึงข้อมูลจากฟอร์ม
+            const name = tripNameInput.value;
+            const date = tripDateInput.value;
+            const pumpName = pumpNameInput.value.trim(); // New: Get Pump Name
+            const km = parseFloat(tripKmInput.value);
+            const startLiters = parseFloat(startLitersInput.value);
+            const endLiters = parseFloat(endLitersInput.value);
+            const pricePerLiter = parseFloat(pricePerLiterInput.value);
+
+            // ตรวจสอบข้อมูลบังคับ
+            if (!name || !date || isNaN(km) || isNaN(startLiters) || isNaN(endLiters) || isNaN(pricePerLiter)) {
+                showMessage('กรุณากรอกข้อมูลที่จำเป็น (มีเครื่องหมาย *) ให้ครบถ้วนและถูกต้อง', 'error');
                 return;
-            }    
+            }
+
+            if (endLiters > startLiters) {
+                showMessage('จำนวนลิตรที่เหลือ ต้องน้อยกว่าหรือเท่ากับ จำนวนลิตรตอนเริ่มต้น', 'error');
+                return;
+            }
             
-            const fuelEfficiency = totalDistance / fuelConsumed; 
-            
-            const tripData = {
-                id, 
-                tripName,
-                tripDate,
-                totalDistance, 
-                startFuelLiters, 
-                endFuelLiters, 
-                fuelConsumed,
-                totalFuelCost,
-                fuelEfficiency,
+            if (km <= 0) {
+                 showMessage('ระยะทางรวมทั้งทริปต้องมากกว่า 0 กม.', 'error');
+                return;
+            }
+
+            // สร้าง Object ทริปใหม่/แก้ไข
+            const newTripData = {
+                name,
+                date,
+                pumpName, // New Field
+                km,
+                startLiters,
+                endLiters,
+                pricePerLiter
             };
 
-            saveTrip(tripData); // Use the new local storage save function
-        });
-        
-        
-        // --- APPLICATION INITIALIZATION ---
+            const trips = getTrips();
 
-        window.onload = () => {
-            resetForm(); 
-            // Initial load of data from Local Storage
-            displayTrips(loadTripsFromLocalStorage()); 
-        };
+            if (currentEditingTripId) {
+                // โหมดแก้ไข
+                const tripIndex = trips.findIndex(t => t.id === currentEditingTripId);
+                if (tripIndex !== -1) {
+                    // อัปเดตข้อมูลทริปเดิม
+                    trips[tripIndex] = { ...trips[tripIndex], ...newTripData };
+                    saveTrips(trips);
+                    showMessage('✅ อัปเดตทริปเรียบร้อยแล้ว!', 'success');
+                }
+                
+                // รีเซ็ต UI และสถานะการแก้ไข
+                resetFormUI();
+                
+            } else {
+                // โหมดเพิ่มใหม่
+                const newTrip = {
+                    id: Date.now(), // ใช้ timestamp เป็น ID ง่ายๆ
+                    ...newTripData
+                };
+                trips.push(newTrip);
+                saveTrips(trips);
+                showMessage('✅ บันทึกทริปใหม่เรียบร้อยแล้ว!', 'success');
+            }
+
+            addTripForm.reset(); // เคลียร์ฟอร์ม
+            // ตั้งค่า วัน/เวลา กลับเป็นเวลาปัจจุบัน
+            tripDateInput.value = getCurrentDateTimeLocal(); 
+            
+            updateAllData(); // อัปเดตหน้าอื่น
+
+            // เปลี่ยนไปหน้า 'All Trips' อัตโนมัติ
+            setTimeout(() => {
+                showPage('all-trips');
+                hideMessage();
+            }, 1500); // หน่วงเวลาเล็กน้อยให้เห็นข้อความ
+        }
+
+        // Function: อัปเดตข้อมูลทุกหน้า
+        function updateAllData() {
+            renderAllTrips();
+            renderSummary();
+        }
+
+        // --- Event Listeners ---
+
+        // เมื่อหน้าเว็บโหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', () => {
+            // ตั้งค่า Event Listener ให้กับ Nav Links
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const pageId = link.getAttribute('data-page');
+                    showPage(pageId);
+                });
+            });
+
+            // ตั้งค่า Event Listener ให้กับฟอร์ม
+            addTripForm.addEventListener('submit', handleFormSubmit);
+
+            // ตั้งค่า Event Listener สำหรับปุ่มปิด Modal
+            closeModalBtn.addEventListener('click', hideDetails);
+            detailModal.addEventListener('click', (e) => {
+                if (e.target === detailModal) {
+                    hideDetails();
+                }
+            });
+
+            // *** ส่วนที่เพิ่ม: ตั้งค่า วัน/เวลา เป็นค่าเริ่มต้น ***
+            tripDateInput.value = getCurrentDateTimeLocal();
+
+            // โหลดข้อมูลครั้งแรก
+            updateAllData();
+            // แสดงหน้าแรก (Summary)
+            showPage('summary');
+        });
 
     </script>
 </body>
