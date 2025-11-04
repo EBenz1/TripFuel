@@ -215,3 +215,80 @@ h1 {
     border-color: var(--color-primary);
     outline: none;
 }
+
+/* ========================================= */
+/* SweetAlert2 Customization for Dark Mode   */
+/* ========================================= */
+
+.dark-mode .swal2-popup {
+    background-color: var(--color-bg-card) !important; /* พื้นหลัง Pop-up เป็นสีเข้มเหมือน Card */
+    color: var(--color-text) !important; /* ข้อความสีสว่าง */
+    border: 1px solid var(--color-border); /* เพิ่มขอบเล็กน้อย */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* เพิ่มเงาให้ดูโดดเด่น */
+}
+
+.dark-mode .swal2-title {
+    color: var(--color-primary) !important; /* เน้นสี Title ด้วยสีหลัก */
+}
+
+.dark-mode .swal2-html-container {
+    color: var(--color-text) !important; /* สีข้อความรายละเอียด */
+}
+
+/* Customizing the Confirm Button (เพื่อให้ใช้สีหลักที่เราตั้งไว้) */
+.swal2-confirm.swal2-styled {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    font-weight: 600;
+}
+
+/* Customizing the Cancel Button (เพื่อให้ใช้สีรอง) */
+.swal2-cancel.swal2-styled {
+    background-color: var(--color-bg-body-hover) !important;
+    color: var(--color-text) !important;
+    border: 1px solid var(--color-border) !important;
+    font-weight: 500;
+}
+
+/* Customizing the Icon Color (ทำให้ Icon ดูดีขึ้นใน Dark Mode) */
+.swal2-icon.swal2-success [class^=swal2-success-line] {
+    background-color: #10b981 !important; /* สีเขียว */
+}
+.swal2-icon.swal2-warning {
+    border-color: #f59e0b !important; /* สีเหลือง */
+    color: #f59e0b !important;
+}
+.swal2-icon.swal2-error {
+    border-color: #ef4444 !important; /* สีแดง */
+    color: #ef4444 !important;
+}
+
+.logo-container {
+    text-align: center; /* จัดให้อยู่ตรงกลาง ถ้าต้องการ */
+    padding: 15px 0 10px 0; /* เว้นระยะห่างด้านบน/ล่าง */
+    background-color: var(--color-bg-header); /* ใช้สีพื้นหลังของ header */
+    border-bottom: 1px solid var(--color-border); /* มีเส้นแบ่งด้านล่าง */
+}
+
+.app-logo {
+    max-width: 180px; /* กำหนดความกว้างสูงสุดของโลโก้ */
+    height: auto; /* รักษาอัตราส่วนของรูปภาพ */
+    display: block; /* จัดให้อยู่ในบล็อกของตัวเอง */
+    margin: 0 auto; /* จัดให้อยู่ตรงกลาง */
+}
+
+/* เพิ่มส่วนนี้ถ้าต้องการปรับขนาดโลโก้ใน Dark Mode */
+.dark-mode .app-logo {
+    /* อาจจะเพิ่ม filter เพื่อปรับสีโลโก้เล็กน้อยถ้ามันสว่างเกินไปใน Dark Mode */
+    /* filter: brightness(0.8) contrast(1.2); */
+}
+
+/* ปรับ padding ของ main-content ให้ไม่ทับโลโก้ */
+#main-content {
+    padding-top: 20px; /* เพิ่มระยะห่างด้านบนของเนื้อหาหลัก */
+}
+
+/* ถ้าต้องการให้ navbar ล่างสุดมี background เหมือนโลโก้ */
+#bottom-navbar {
+    background-color: var(--color-bg-header); /* หรือสีที่คุณต้องการ */
+}

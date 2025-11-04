@@ -20,6 +20,8 @@ const translations = {
     'fuel_start': { th: 'ลิตรน้ำมัน **ก่อน** ออก (ลิตร)', en: 'Fuel **Start** (Liters)' },
     'fuel_end': { th: 'ลิตรน้ำมัน **หลัง** จบ (ลิตร)', en: 'Fuel **End** (Liters)' },
     'fuel_price': { th: 'ราคาน้ำมันต่อลิตร (บาท)', en: 'Price per Liter (THB)' },
+    'trip_hashtags': { th: 'เพิ่ม Hashtag (#)', en: 'Add Hashtag (#)' }, // New
+    'hashtag_placeholder': { th: 'เช่น #เที่ยวเหนือ #ครอบครัว', en: 'e.g., #NorthernTrip #Family' }, // New
     'save_trip_btn': { th: 'บันทึกทริป', en: 'Save Trip' },
     'calc_summary': { th: 'กำลังคำนวณ...', en: 'Calculating...' },
     'no_trip_prompt': { th: 'โปรดบันทึกทริปแรกเพื่อดูข้อมูลสรุป', en: 'Please record your first trip to see the summary.' },
@@ -29,12 +31,17 @@ const translations = {
     'language_setting': { th: 'ภาษา', en: 'Language' },
     'clear_data': { th: 'ลบข้อมูลทั้งหมด', en: 'Clear All Data' },
     'clear_data_sub': { th: 'ล้างทริปและรถ', en: 'Clear trips and cars' },
+    'clear_trips': { th: 'ลบทริปทั้งหมด', en: 'Clear All Trips' }, // New
+    'clear_cars': { th: 'ลบรถยนต์ทั้งหมด', en: 'Clear All Cars' }, // New
     'app_version': { th: 'เวอร์ชั่น: 1.0.0-alpha', en: 'Version: 1.0.0-alpha' },
     'app_dev': { th: 'พัฒนาโดย: StarUp Dev Team (คู่หูเขียนโค้ด)', en: 'Developed by: StarUp Dev Team (Coding Partner)' },
     'error_fuel_end': { th: "ข้อผิดพลาด: 'ลิตรน้ำมันหลังจบ' ไม่ควรมากกว่า 'ลิตรน้ำมันก่อนออก'!", en: "Error: 'Fuel End' should not be greater than 'Fuel Start'!" },
     'save_success': { th: 'บันทึกทริป "${name}" เรียบร้อย!', en: 'Trip "${name}" saved successfully!' },
-    'warning_clear_data': { th: "คำเตือน! การดำเนินการนี้จะล้างข้อมูลทริปและรถยนต์ทั้งหมด คุณแน่ใจหรือไม่?", en: "Warning! This operation will clear all trip and car data. Are you sure?" },
-    'data_cleared': { th: "ข้อมูลทั้งหมดถูกล้างแล้ว! โปรดโหลดหน้าเว็บใหม่", en: "All data has been cleared! Please reload the page." },
+    'save_car_success': { th: 'บันทึกรถยนต์ "${name}" เรียบร้อย!', en: 'Car "${name}" saved successfully!' }, // New
+    'warning_clear_data': { th: "คำเตือน! การดำเนินการนี้จะล้างข้อมูล ${type} ทั้งหมด คุณแน่ใจหรือไม่?", en: "Warning! This operation will clear all ${type} data. Are you sure?" }, // Updated
+    'data_cleared': { th: "ข้อมูล ${type} ถูกล้างแล้ว! โปรดโหลดหน้าเว็บใหม่", en: "${type} data has been cleared! Please reload the page." }, // Updated
+    'car_type': { th: 'รถยนต์', en: 'Car' }, // New
+    'trip_type': { th: 'ทริป', en: 'Trip' }, // New
     'add_car': { th: 'เพิ่มรถยนต์ใหม่', en: 'Add New Car' },
     'car_name': { th: 'ชื่อรถ', en: 'Car Name' },
     'plate': { th: 'ทะเบียนรถ', en: 'License Plate' },
@@ -59,7 +66,9 @@ const translations = {
     'km_unit': { th: 'กม.', en: 'km' },
     'liter_unit': { th: 'ลิตร', en: 'Liters' },
     'kml_unit': { th: 'กม./ลิตร', en: 'km/Liter' },
-    'baht_unit': { th: 'บาท', en: 'Baht' }
+    'baht_unit': { th: 'บาท', en: 'Baht' },
+    'confirm': { th: 'ยืนยัน', en: 'Confirm' },
+    'cancel': { th: 'ยกเลิก', en: 'Cancel' },
 };
 
 function getTranslation(key) {
@@ -167,14 +176,71 @@ function deleteCar(carId) {
     saveAppData(appData);
 }
 
-// ฟังก์ชัน: ล้างข้อมูลทั้งหมด
-function clearAllData() {
-    if(confirm(getTranslation('warning_clear_data'))) {
-        localStorage.removeItem(DATA_KEY);
-        alert(getTranslation('data_cleared'));
-        window.location.reload();
-    }
+// ฟังก์ชัน: ล้างข้อมูลทั้งหมด (ปรับปรุงใหม่)
+function clearAllData(dataType) {
+    const typeKey = dataType === 'trips' ? 'trip_type' : 'car_type';
+    const typeName = getTranslation(typeKey);
+
+    const warningMessage = getTranslation('warning_clear_data').replace('${type}', typeName);
+
+    // ใช้ Sweet Alert แทน confirm()
+    Swal.fire({
+        title: 'ยืนยันการลบข้อมูล',
+        text: warningMessage,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: getTranslation('confirm'),
+        cancelButtonText: getTranslation('cancel')
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const appData = getAppData();
+            if (dataType === 'trips') {
+                appData.trips = [];
+            } else if (dataType === 'cars') {
+                appData.cars = [];
+            }
+            saveAppData(appData);
+
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: getTranslation('data_cleared').replace('${type}', typeName),
+                icon: 'success',
+                confirmButtonColor: 'var(--color-primary)'
+            }).then(() => {
+                window.location.reload();
+            });
+        }
+    });
 }
+
+// === 1.1 Pop-up Management (New Feature) ===
+/**
+ * แสดง Pop-up แจ้งเตือนกลางจอ (แทน alert/confirm ธรรมดา)
+ * ต้องเรียกใช้ library เช่น SweetAlert2 ใน index.html
+ */
+function showPopup(title, text, icon, callback = null) {
+    if (typeof Swal === 'undefined') {
+        // Fallback to native alert if SweetAlert2 is not loaded
+        alert(`${title}: ${text}`);
+        if (callback) callback();
+        return;
+    }
+    
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: icon, // 'success', 'error', 'warning', 'info', 'question'
+        confirmButtonText: getTranslation('confirm'),
+        confirmButtonColor: 'var(--color-primary)'
+    }).then((result) => {
+        if (result.isConfirmed && callback) {
+            callback();
+        }
+    });
+}
+
 
 // === 2. Theme & Language Management ===
 const rootElement = document.documentElement;
@@ -355,7 +421,7 @@ function renderDashboard() {
     `;
 }
 
-// 4.2 Record Trip
+// 4.2 Record Trip (Updated with Hashtag input)
 function renderRecordTrip(tripId = null) {
     const { cars, trips } = getAppData();
     let currentTrip = {
@@ -365,7 +431,8 @@ function renderRecordTrip(tripId = null) {
         fuelStartLiters: 0,
         fuelEndLiters: 0,
         fuelPricePerLiter: 0,
-        carId: ''
+        carId: '',
+        hashtags: '', // New property for hashtags
     };
     let isEditing = false;
     
@@ -417,9 +484,14 @@ function renderRecordTrip(tripId = null) {
                 </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 25px;">
+            <div class="form-group" style="margin-bottom: 15px;">
                 <label for="fuelPricePerLiter">${getTranslation('fuel_price')}</label>
                 <input type="number" name="fuelPricePerLiter" id="fuelPricePerLiter" min="0" step="0.01" value="${currentTrip.fuelPricePerLiter}" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label for="hashtags">${getTranslation('trip_hashtags')}</label>
+                <input type="text" name="hashtags" id="hashtags" placeholder="${getTranslation('hashtag_placeholder')}" value="${currentTrip.hashtags || ''}">
             </div>
 
             <button type="submit" class="btn-primary" ${cars.length === 0 ? 'disabled' : ''}>${isEditing ? 'บันทึกการแก้ไข' : getTranslation('save_trip_btn')}</button>
@@ -432,7 +504,7 @@ function renderRecordTrip(tripId = null) {
     }
 }
 
-// ฟังก์ชัน: จัดการการ Submit ฟอร์มบันทึก/แก้ไขทริป
+// ฟังก์ชัน: จัดการการ Submit ฟอร์มบันทึก/แก้ไขทริป (Updated to use showPopup)
 function handleRecordTripSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -446,19 +518,21 @@ function handleRecordTripSubmit(event) {
         fuelStartLiters: form.fuelStartLiters.value,
         fuelEndLiters: form.fuelEndLiters.value,
         fuelPricePerLiter: form.fuelPricePerLiter.value,
+        hashtags: form.hashtags.value.trim(), // Get new hashtag value
     };
 
     if (parseFloat(formData.fuelEndLiters) > parseFloat(formData.fuelStartLiters)) {
-        alert(getTranslation('error_fuel_end'));
+        showPopup('ข้อผิดพลาด', getTranslation('error_fuel_end'), 'error');
         return;
     }
 
     addTrip(formData);
     
-    alert(getTranslation('save_success').replace('${name}', formData.tripName));
-    
-    form.reset();
-    window.location.hash = '#trips'; 
+    // Use Pop-up instead of native alert
+    showPopup('สำเร็จ', getTranslation('save_success').replace('${name}', formData.tripName), 'success', () => {
+        form.reset();
+        window.location.hash = '#trips'; 
+    });
 }
 
 // 4.3 Trip List
@@ -479,10 +553,16 @@ function renderTripList() {
                     const fuelUsed = trip.fuelStartLiters - trip.fuelEndLiters;
                     const kmPerLiter = trip.totalKm / fuelUsed;
                     
+                    // Display Hashtags
+                    const hashtagsHtml = trip.hashtags ? 
+                        `<p style="font-size: 12px; color: var(--color-text-sub); margin-top: 5px;">${trip.hashtags.split(/\s+/).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
+                        '';
+
                     return `
                         <div class="card trip-item" data-trip-id="${trip.id}" style="margin-bottom: 10px; padding: 15px; cursor: pointer;" onclick="window.location.hash = '#trips:${trip.id}'">
                             <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 5px;">${trip.tripName}</p>
                             <p style="font-size: 12px; color: var(--color-text-sub);">รถ: ${getCarName(trip.carId)} | เมื่อ: ${trip.dateTime}</p>
+                            ${hashtagsHtml}
                             <hr style="border-top: 1px dashed var(--color-border); margin: 8px 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
                                 <span>${getTranslation('distance')}: <b>${trip.totalKm.toFixed(1)} ${getTranslation('km_unit')}</b></span>
@@ -496,7 +576,7 @@ function renderTripList() {
     `;
 }
 
-// 4.4 Trip Detail (หน้าใหม่สำหรับแสดงรายละเอียด)
+// 4.4 Trip Detail (Updated to display Hashtags)
 function renderTripDetail(tripId) {
     const { trips, cars } = getAppData();
     const trip = trips.find(t => t.id === tripId);
@@ -522,6 +602,11 @@ function renderTripDetail(tripId) {
     const cost = fuelUsed * trip.fuelPricePerLiter;
     const kmPerLiter = fuelUsed > 0 ? trip.totalKm / fuelUsed : 0;
     
+    // Display Hashtags
+    const hashtagsHtml = trip.hashtags ? 
+        `<p style="font-size: 12px; color: var(--color-text-sub); margin-bottom: 15px;">${trip.hashtags.split(/\s+/).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
+        '';
+
     // ข้อมูลสำหรับแสดงผลใน Stat Card
     const stats = [
         { 
@@ -573,7 +658,7 @@ function renderTripDetail(tripId) {
             ${carImageURL ? `
                 <img src="${carImageURL}" alt="${getCarName(trip.carId)}" style="
                     position: absolute; 
-                    top: 40px;          /* ปรับลงมาตามภาพล่าสุด (จาก 60px เป็น 40px) */
+                    top: 40px;          
                     right: 15px;        
                     width: 120px;       
                     height: 75px;       
@@ -584,12 +669,14 @@ function renderTripDetail(tripId) {
                 ">
             ` : ''}
 
-            <p style="font-size: 20px; font-weight: 700; color: var(--color-primary); margin-bottom: 5px; ${carImageURL ? 'padding-right: 140px;' : '' /* ใช้ 140px เพื่อเว้นพื้นที่รูป 120px */}">
+            <p style="font-size: 20px; font-weight: 700; color: var(--color-primary); margin-bottom: 5px; ${carImageURL ? 'padding-right: 140px;' : ''}">
                 ${trip.tripName}
             </p>
             <p style="font-size: 12px; color: var(--color-text-sub); margin-bottom: 15px;">
                 <i class="fas fa-calendar-alt" style="margin-right: 5px;"></i> ${trip.dateTime}
             </p>
+            
+            ${hashtagsHtml}
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 ${stats.map(stat => `
@@ -643,11 +730,24 @@ function renderTripDetail(tripId) {
     });
     
     document.getElementById('delete-btn')?.addEventListener('click', () => {
-        if (confirm(getTranslation('delete_trip_confirm'))) {
-            deleteTrip(tripId);
-            alert(getTranslation('trip_deleted'));
-            window.location.hash = '#trips';
-        }
+        // Use Pop-up for confirmation
+        Swal.fire({
+            title: 'ยืนยันการลบ',
+            text: getTranslation('delete_trip_confirm'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: getTranslation('confirm'),
+            cancelButtonText: getTranslation('cancel')
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteTrip(tripId);
+                showPopup('สำเร็จ', getTranslation('trip_deleted'), 'success', () => {
+                    window.location.hash = '#trips';
+                });
+            }
+        });
     });
 
     document.getElementById('export-btn')?.addEventListener('click', () => {
@@ -661,7 +761,7 @@ function handleExportToJPG(tripId) {
     const tripName = getAppData().trips.find(t => t.id === tripId)?.tripName || 'Trip_Detail';
 
     if (typeof html2canvas === 'undefined') {
-        alert("ข้อผิดพลาด: ไลบรารี html2canvas ไม่ถูกโหลด โปรดตรวจสอบไฟล์ index.html");
+        showPopup('ข้อผิดพลาด', "ไลบรารี html2canvas ไม่ถูกโหลด โปรดตรวจสอบไฟล์ index.html", 'error');
         return;
     }
 
@@ -699,7 +799,7 @@ function fileToBase64(file) {
     });
 }
 
-// 4.5 Car Management
+// 4.5 Car Management (Updated to use showPopup for delete)
 function renderCarManagement() {
     const { cars } = getAppData();
     const t = (key) => translations[key]?.[getAppData().settings.language] || key;
@@ -758,7 +858,7 @@ function renderCarManagement() {
     });
 }
 
-// ฟังก์ชันสำหรับจัดการการ Submit ฟอร์มเพิ่มรถยนต์ (เปลี่ยนเป็น async)
+// ฟังก์ชันสำหรับจัดการการ Submit ฟอร์มเพิ่มรถยนต์ (Updated to use showPopup)
 async function handleAddCarSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -778,24 +878,37 @@ async function handleAddCarSubmit(event) {
 
     addCar(newCar);
     
-    form.reset();
-    renderCarManagement(); 
+    showPopup('สำเร็จ', getTranslation('save_car_success').replace('${name}', newCar.name), 'success', () => {
+        form.reset();
+        renderCarManagement(); 
+    });
 }
 
-// ฟังก์ชันสำหรับจัดการการลบรถยนต์
+// ฟังก์ชันสำหรับจัดการการลบรถยนต์ (Updated to use showPopup)
 function handleDeleteCarClick(event) {
     const carId = event.currentTarget.getAttribute('data-id');
     const t = (key) => translations[key]?.[getAppData().settings.language] || key;
     
-    if (confirm(t('delete_confirm'))) {
-        deleteCar(carId);
-        alert(t('car_delete_success'));
-        renderCarManagement(); 
-    }
+    // Use Pop-up for confirmation
+    Swal.fire({
+        title: 'ยืนยันการลบ',
+        text: t('delete_confirm'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: t('confirm'),
+        cancelButtonText: t('cancel')
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteCar(carId);
+            showPopup('สำเร็จ', t('car_delete_success'), 'success', renderCarManagement);
+        }
+    });
 }
 
 
-// 4.6 Settings
+// 4.6 Settings (Updated Clear Data section)
 function renderSettings() {
     const appData = getAppData();
     const theme = appData.settings.theme;
@@ -819,10 +932,15 @@ function renderSettings() {
                     <i class="fas fa-toggle-${theme === 'dark' ? 'on' : 'off'}" style="font-size: 24px; color: ${theme === 'dark' ? 'var(--color-primary)' : 'var(--color-text-sub)'};"></i>
                 </button>
             </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: #ef4444; cursor: pointer; border-bottom: 1px solid var(--color-border);" id="clear-trips-btn">
+                <span style="font-weight: 500;"><i class="fas fa-route" style="color: #ef4444; margin-right: 10px;"></i> ${getTranslation('clear_trips')}</span>
+                <span style="font-size: 12px; color: var(--color-text-sub);">ลบข้อมูลทริปทั้งหมด</span>
+            </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: #ef4444; cursor: pointer;" id="clear-data-btn">
-                <span style="font-weight: 500;"><i class="fas fa-trash-alt" style="color: #ef4444; margin-right: 10px;"></i> ${getTranslation('clear_data')}</span>
-                <span style="font-size: 12px; color: var(--color-text-sub);">${getTranslation('clear_data_sub')}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: #ef4444; cursor: pointer;" id="clear-cars-btn">
+                <span style="font-weight: 500;"><i class="fas fa-car" style="color: #ef4444; margin-right: 10px;"></i> ${getTranslation('clear_cars')}</span>
+                <span style="font-size: 12px; color: var(--color-text-sub);">ลบข้อมูลรถยนต์ทั้งหมด</span>
             </div>
         </div>
 
@@ -834,7 +952,10 @@ function renderSettings() {
     `;
 
     document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
-    document.getElementById('clear-data-btn')?.addEventListener('click', clearAllData);
+    
+    // New Event Listeners for selective clear
+    document.getElementById('clear-trips-btn')?.addEventListener('click', () => clearAllData('trips'));
+    document.getElementById('clear-cars-btn')?.addEventListener('click', () => clearAllData('cars'));
     
     document.getElementById('language-select')?.addEventListener('change', (e) => {
         setLanguage(e.target.value);
@@ -851,3 +972,24 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavbarText(); 
     renderCurrentPage();
 });
+
+function showPopup(title, text, icon, callback = null) {
+    if (typeof Swal === 'undefined') {
+        // Fallback...
+        alert(`${title}: ${text}`);
+        if (callback) callback();
+        return;
+    }
+    
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: icon, // 'success', 'error', 'warning', 'info', 'question'
+        confirmButtonText: getTranslation('confirm'),
+        confirmButtonColor: 'var(--color-primary)' // ใช้สีหลักของแอป
+    }).then((result) => {
+        if (result.isConfirmed && callback) {
+            callback();
+        }
+    });
+}
