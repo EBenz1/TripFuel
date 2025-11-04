@@ -263,32 +263,48 @@ h1 {
     color: #ef4444 !important;
 }
 
-.logo-container {
-    text-align: center; /* จัดให้อยู่ตรงกลาง ถ้าต้องการ */
-    padding: 15px 0 10px 0; /* เว้นระยะห่างด้านบน/ล่าง */
-    background-color: var(--color-bg-header); /* ใช้สีพื้นหลังของ header */
-    border-bottom: 1px solid var(--color-border); /* มีเส้นแบ่งด้านล่าง */
+/* Style for the Export Buttons container */
+.export-container {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-border);
 }
 
-.app-logo {
-    max-width: 180px; /* กำหนดความกว้างสูงสุดของโลโก้ */
-    height: auto; /* รักษาอัตราส่วนของรูปภาพ */
-    display: block; /* จัดให้อยู่ในบล็อกของตัวเอง */
-    margin: 0 auto; /* จัดให้อยู่ตรงกลาง */
+.export-container h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--color-primary);
 }
 
-/* เพิ่มส่วนนี้ถ้าต้องการปรับขนาดโลโก้ใน Dark Mode */
-.dark-mode .app-logo {
-    /* อาจจะเพิ่ม filter เพื่อปรับสีโลโก้เล็กน้อยถ้ามันสว่างเกินไปใน Dark Mode */
-    /* filter: brightness(0.8) contrast(1.2); */
+.export-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-/* ปรับ padding ของ main-content ให้ไม่ทับโลโก้ */
-#main-content {
-    padding-top: 20px; /* เพิ่มระยะห่างด้านบนของเนื้อหาหลัก */
+/* CSV Button Style */
+#export-csv-btn {
+    background-color: var(--color-soft-blue); /* สีฟ้าอ่อน */
+    border: 1px solid var(--color-soft-blue-border);
+    color: var(--color-text);
+    font-family: 'IBM Plex Sans Thai', sans-serif
 }
 
-/* ถ้าต้องการให้ navbar ล่างสุดมี background เหมือนโลโก้ */
-#bottom-navbar {
-    background-color: var(--color-bg-header); /* หรือสีที่คุณต้องการ */
+/* PDF Button Style */
+#export-pdf-btn {
+    background-color: var(--color-soft-red); /* สีแดงอ่อน */
+    border: 1px solid var(--color-soft-red-border);
+    color: var(--color-text);
+    font-family: 'IBM Plex Sans Thai', sans-serif
 }
+

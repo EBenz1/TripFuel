@@ -20,8 +20,8 @@ const translations = {
     'fuel_start': { th: 'ลิตรน้ำมัน **ก่อน** ออก (ลิตร)', en: 'Fuel **Start** (Liters)' },
     'fuel_end': { th: 'ลิตรน้ำมัน **หลัง** จบ (ลิตร)', en: 'Fuel **End** (Liters)' },
     'fuel_price': { th: 'ราคาน้ำมันต่อลิตร (บาท)', en: 'Price per Liter (THB)' },
-    'trip_hashtags': { th: 'เพิ่ม Hashtag (#)', en: 'Add Hashtag (#)' }, // New
-    'hashtag_placeholder': { th: 'เช่น #เที่ยวเหนือ #ครอบครัว', en: 'e.g., #NorthernTrip #Family' }, // New
+    'trip_hashtags': { th: 'เพิ่ม Hashtag (#)', en: 'Add Hashtag (#)' }, 
+    'hashtag_placeholder': { th: 'เช่น #เที่ยวเหนือ #ครอบครัว', en: 'e.g., #NorthernTrip #Family' }, 
     'save_trip_btn': { th: 'บันทึกทริป', en: 'Save Trip' },
     'calc_summary': { th: 'กำลังคำนวณ...', en: 'Calculating...' },
     'no_trip_prompt': { th: 'โปรดบันทึกทริปแรกเพื่อดูข้อมูลสรุป', en: 'Please record your first trip to see the summary.' },
@@ -31,17 +31,17 @@ const translations = {
     'language_setting': { th: 'ภาษา', en: 'Language' },
     'clear_data': { th: 'ลบข้อมูลทั้งหมด', en: 'Clear All Data' },
     'clear_data_sub': { th: 'ล้างทริปและรถ', en: 'Clear trips and cars' },
-    'clear_trips': { th: 'ลบทริปทั้งหมด', en: 'Clear All Trips' }, // New
-    'clear_cars': { th: 'ลบรถยนต์ทั้งหมด', en: 'Clear All Cars' }, // New
+    'clear_trips': { th: 'ลบทริปทั้งหมด', en: 'Clear All Trips' }, 
+    'clear_cars': { th: 'ลบรถยนต์ทั้งหมด', en: 'Clear All Cars' }, 
     'app_version': { th: 'เวอร์ชั่น: 1.0.0-alpha', en: 'Version: 1.0.0-alpha' },
     'app_dev': { th: 'พัฒนาโดย: StarUp Dev Team (คู่หูเขียนโค้ด)', en: 'Developed by: StarUp Dev Team (Coding Partner)' },
     'error_fuel_end': { th: "ข้อผิดพลาด: 'ลิตรน้ำมันหลังจบ' ไม่ควรมากกว่า 'ลิตรน้ำมันก่อนออก'!", en: "Error: 'Fuel End' should not be greater than 'Fuel Start'!" },
     'save_success': { th: 'บันทึกทริป "${name}" เรียบร้อย!', en: 'Trip "${name}" saved successfully!' },
-    'save_car_success': { th: 'บันทึกรถยนต์ "${name}" เรียบร้อย!', en: 'Car "${name}" saved successfully!' }, // New
-    'warning_clear_data': { th: "คำเตือน! การดำเนินการนี้จะล้างข้อมูล ${type} ทั้งหมด คุณแน่ใจหรือไม่?", en: "Warning! This operation will clear all ${type} data. Are you sure?" }, // Updated
-    'data_cleared': { th: "ข้อมูล ${type} ถูกล้างแล้ว! โปรดโหลดหน้าเว็บใหม่", en: "${type} data has been cleared! Please reload the page." }, // Updated
-    'car_type': { th: 'รถยนต์', en: 'Car' }, // New
-    'trip_type': { th: 'ทริป', en: 'Trip' }, // New
+    'save_car_success': { th: 'บันทึกรถยนต์ "${name}" เรียบร้อย!', en: 'Car "${name}" saved successfully!' }, 
+    'warning_clear_data': { th: "คำเตือน! การดำเนินการนี้จะล้างข้อมูล ${type} ทั้งหมด คุณแน่ใจหรือไม่?", en: "Warning! This operation will clear all ${type} data. You are sure?" }, 
+    'data_cleared': { th: "ข้อมูล ${type} ถูกล้างแล้ว! โปรดโหลดหน้าเว็บใหม่", en: "${type} data has been cleared! Please reload the page." }, 
+    'car_type': { th: 'รถยนต์', en: 'Car' }, 
+    'trip_type': { th: 'ทริป', en: 'Trip' }, 
     'add_car': { th: 'เพิ่มรถยนต์ใหม่', en: 'Add New Car' },
     'car_name': { th: 'ชื่อรถ', en: 'Car Name' },
     'plate': { th: 'ทะเบียนรถ', en: 'License Plate' },
@@ -69,6 +69,12 @@ const translations = {
     'baht_unit': { th: 'บาท', en: 'Baht' },
     'confirm': { th: 'ยืนยัน', en: 'Confirm' },
     'cancel': { th: 'ยกเลิก', en: 'Cancel' },
+    // ** คำแปลใหม่สำหรับ Export Report **
+    'export_report': { th: 'ส่งออกรายงาน', en: 'Export Reports' },
+    'export_csv': { th: 'ส่งออกเป็น CSV', en: 'Export to CSV' },
+    'export_pdf': { th: 'ส่งออกเป็น PDF', en: 'Export to PDF' },
+    'mock_export_csv': { th: 'ส่งออก CSV: ข้อมูลทริป ${count} รายการถูกเตรียมแล้ว (ไฟล์ดาวน์โหลดจะแสดงในเวอร์ชั่นเต็ม)', en: 'Export CSV: ${count} trips prepared (Download will appear in full version).' },
+    'mock_export_pdf': { th: 'ส่งออก PDF: กำลังสร้างรายงานสำหรับทริป ${count} รายการ (ไฟล์ดาวน์โหลดจะแสดงในเวอร์ชั่นเต็ม)', en: 'Export PDF: Generating report for ${count} trips (Download will appear in full version).' },
 };
 
 function getTranslation(key) {
@@ -134,10 +140,11 @@ function addTrip(newTrip) {
     // แปลงค่าให้เป็น Float สำหรับการจัดเก็บ
     const tripData = {
         ...newTrip,
-        totalKm: parseFloat(newTrip.totalKm),
-        fuelStartLiters: parseFloat(newTrip.fuelStartLiters),
-        fuelEndLiters: parseFloat(newTrip.fuelEndLiters),
-        fuelPricePerLiter: parseFloat(newTrip.fuelPricePerLiter),
+        // ** ต้องแน่ใจว่าค่าเป็นตัวเลข ก่อนเก็บใน Local Storage **
+        totalKm: parseFloat(newTrip.totalKm || 0),
+        fuelStartLiters: parseFloat(newTrip.fuelStartLiters || 0),
+        fuelEndLiters: parseFloat(newTrip.fuelEndLiters || 0),
+        fuelPricePerLiter: parseFloat(newTrip.fuelPricePerLiter || 0),
         dateTime: new Date(newTrip.dateTime).toLocaleString(),
     };
 
@@ -215,10 +222,9 @@ function clearAllData(dataType) {
     });
 }
 
-// === 1.1 Pop-up Management (New Feature) ===
+// === 1.1 Pop-up Management ===
 /**
- * แสดง Pop-up แจ้งเตือนกลางจอ (แทน alert/confirm ธรรมดา)
- * ต้องเรียกใช้ library เช่น SweetAlert2 ใน index.html
+ * แสดง Pop-up แจ้งเตือนกลางจอ (ใช้ SweetAlert2)
  */
 function showPopup(title, text, icon, callback = null) {
     if (typeof Swal === 'undefined') {
@@ -233,7 +239,7 @@ function showPopup(title, text, icon, callback = null) {
         text: text,
         icon: icon, // 'success', 'error', 'warning', 'info', 'question'
         confirmButtonText: getTranslation('confirm'),
-        confirmButtonColor: 'var(--color-primary)'
+        confirmButtonColor: 'var(--color-primary)' // ใช้สีหลักของแอป
     }).then((result) => {
         if (result.isConfirmed && callback) {
             callback();
@@ -421,18 +427,19 @@ function renderDashboard() {
     `;
 }
 
-// 4.2 Record Trip (Updated with Hashtag input)
+// 4.2 Record Trip (Updated with empty values for new trips)
 function renderRecordTrip(tripId = null) {
     const { cars, trips } = getAppData();
     let currentTrip = {
         tripName: '',
         dateTime: new Date().toISOString().substring(0, 16),
-        totalKm: 0,
-        fuelStartLiters: 0,
-        fuelEndLiters: 0,
-        fuelPricePerLiter: 0,
+        // ** แก้ไข: ค่าเริ่มต้นเป็นสตริงว่างเปล่าสำหรับทริปใหม่ **
+        totalKm: '', 
+        fuelStartLiters: '', 
+        fuelEndLiters: '', 
+        fuelPricePerLiter: '', 
         carId: '',
-        hashtags: '', // New property for hashtags
+        hashtags: '', 
     };
     let isEditing = false;
     
@@ -442,6 +449,12 @@ function renderRecordTrip(tripId = null) {
         const isoString = new Date(dateObj.getTime() - (dateObj.getTimezoneOffset() * 60000)).toISOString().substring(0, 16);
         currentTrip.dateTime = isoString;
         isEditing = true;
+        
+        // ** สำหรับการแก้ไข: ต้องแปลงค่าตัวเลขกลับเป็น String เพื่อแสดงใน Input **
+        currentTrip.totalKm = String(currentTrip.totalKm);
+        currentTrip.fuelStartLiters = String(currentTrip.fuelStartLiters);
+        currentTrip.fuelEndLiters = String(currentTrip.fuelEndLiters);
+        currentTrip.fuelPricePerLiter = String(currentTrip.fuelPricePerLiter);
     }
 
     mainContent.innerHTML = `
@@ -555,7 +568,7 @@ function renderTripList() {
                     
                     // Display Hashtags
                     const hashtagsHtml = trip.hashtags ? 
-                        `<p style="font-size: 12px; color: var(--color-text-sub); margin-top: 5px;">${trip.hashtags.split(/\s+/).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
+                        `<p style="font-size: 12px; color: var(--color-text-sub); margin-top: 5px;">${trip.hashtags.split(/\s+/).filter(t => t.startsWith('#')).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
                         '';
 
                     return `
@@ -604,7 +617,7 @@ function renderTripDetail(tripId) {
     
     // Display Hashtags
     const hashtagsHtml = trip.hashtags ? 
-        `<p style="font-size: 12px; color: var(--color-text-sub); margin-bottom: 15px;">${trip.hashtags.split(/\s+/).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
+        `<p style="font-size: 12px; color: var(--color-text-sub); margin-bottom: 15px;">${trip.hashtags.split(/\s+/).filter(t => t.startsWith('#')).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
         '';
 
     // ข้อมูลสำหรับแสดงผลใน Stat Card
@@ -917,7 +930,7 @@ function renderSettings() {
     mainContent.innerHTML = `
         <h1><i class="fas fa-cog" style="color: var(--color-primary); margin-right: 10px;"></i> ${getTranslation('settings')}</h1>
         
-        <div class="card" style="padding: 10px;">
+        <div class="card" style="padding: 10px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--color-border);">
                 <span style="font-weight: 500;"><i class="fas fa-globe" style="color: var(--color-primary); margin-right: 10px;"></i> ${getTranslation('language_setting')}</span>
                 <select id="language-select" style="padding: 5px 10px; border-radius: 6px; border: 1px solid var(--color-border); background-color: var(--color-bg-card); color: var(--color-text);">
@@ -926,13 +939,25 @@ function renderSettings() {
                 </select>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--color-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                 <span style="font-weight: 500;"><i class="fas fa-moon" style="color: var(--color-primary); margin-right: 10px;"></i> ${getTranslation('theme_setting')} (${theme === 'light' ? getTranslation('theme_light') : getTranslation('theme_dark')})</span>
                 <button id="theme-toggle-btn" style="background: none; border: none; cursor: pointer; color: var(--color-text);">
                     <i class="fas fa-toggle-${theme === 'dark' ? 'on' : 'off'}" style="font-size: 24px; color: ${theme === 'dark' ? 'var(--color-primary)' : 'var(--color-text-sub)'};"></i>
                 </button>
             </div>
-            
+        </div>
+        
+        <div class="card export-container">
+            <h3><i class="fas fa-download" style="margin-right: 8px;"></i> ${getTranslation('export_report')}</h3>
+            <button id="export-csv-btn" class="export-btn">
+                <i class="fas fa-file-csv"></i> ${getTranslation('export_csv')}
+            </button>
+            <button id="export-pdf-btn" class="export-btn">
+                <i class="fas fa-file-pdf"></i> ${getTranslation('export_pdf')}
+            </button>
+        </div>
+        
+        <div class="card" style="padding: 10px; margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: #ef4444; cursor: pointer; border-bottom: 1px solid var(--color-border);" id="clear-trips-btn">
                 <span style="font-weight: 500;"><i class="fas fa-route" style="color: #ef4444; margin-right: 10px;"></i> ${getTranslation('clear_trips')}</span>
                 <span style="font-size: 12px; color: var(--color-text-sub);">ลบข้อมูลทริปทั้งหมด</span>
@@ -960,6 +985,99 @@ function renderSettings() {
     document.getElementById('language-select')?.addEventListener('change', (e) => {
         setLanguage(e.target.value);
     });
+    
+    // **NEW EVENT LISTENERS FOR EXPORT BUTTONS**
+    document.getElementById('export-csv-btn')?.addEventListener('click', exportToCSV);
+    document.getElementById('export-pdf-btn')?.addEventListener('click', exportToPDF);
+}
+
+
+// === 4.7 Export Functions (Actual CSV Export) ===
+
+/**
+ * ฟังก์ชันสำหรับส่งออกข้อมูลทริปทั้งหมดเป็นไฟล์ CSV
+ * (โค้ดจริงที่ทำให้เกิดการดาวน์โหลดไฟล์)
+ */
+function exportToCSV() {
+    const { trips } = getAppData();
+    const tripCount = trips.length;
+
+    if (tripCount === 0) {
+        showPopup(
+            getTranslation('export_report'),
+            'ไม่พบข้อมูลทริปที่จะส่งออก',
+            'warning'
+        );
+        return;
+    }
+
+    // 1. สร้าง Header Row (ชื่อคอลัมน์)
+    const header = [
+        "ID", "Name", "Date", "Car Plate", "Distance (km)", 
+        "Fuel Start (L)", "Fuel End (L)", "Fuel Used (L)", 
+        "Price (THB/L)", "Cost (THB)", "Fuel Efficiency (km/L)", "Hashtags"
+    ].join(",");
+
+    // 2. สร้าง Data Rows
+    const rows = trips.map(t => {
+        const fuelUsed = t.fuelStartLiters - t.fuelEndLiters;
+        const cost = fuelUsed * t.fuelPricePerLiter;
+        const kmPerLiter = fuelUsed > 0 ? t.totalKm / fuelUsed : 0;
+        
+        const car = getAppData().cars.find(c => c.id === t.carId);
+        const carPlate = car ? car.plate : 'N/A';
+        
+        return [
+            `"${t.id}"`, 
+            `"${t.tripName}"`, 
+            `"${t.dateTime}"`,
+            `"${carPlate}"`, 
+            `"${t.totalKm}"`,
+            `"${t.fuelStartLiters}"`,
+            `"${t.fuelEndLiters}"`,
+            `"${fuelUsed.toFixed(2)}"`,
+            `"${t.fuelPricePerLiter}"`,
+            `"${cost.toFixed(2)}"`,
+            `"${kmPerLiter.toFixed(2)}"`,
+            `"${t.hashtags}"`
+        ].join(",");
+    }).join("\n");
+    
+    // 3. รวม Header และ Rows
+    // \uFEFF คือ Byte Order Mark (BOM) เพื่อให้ Excel เปิดไฟล์ภาษาไทยได้อย่างถูกต้อง
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + header + "\n" + rows;
+
+    // 4. สร้าง Link และเริ่มการดาวน์โหลด
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "fuel_trip_report_" + new Date().toISOString().slice(0, 10) + ".csv");
+    
+    link.style.display = 'none';
+    document.body.appendChild(link); 
+    link.click();
+    document.body.removeChild(link);
+
+    showPopup(
+        getTranslation('export_report'),
+        'ส่งออก CSV: ข้อมูลทริปทั้งหมดถูกดาวน์โหลดแล้ว!',
+        'success'
+    );
+}
+
+/**
+ * ฟังก์ชันจำลองสำหรับการส่งออกข้อมูลเป็น PDF (ยังคงเป็น Mock/ต้องใช้ Library เสริม)
+ */
+function exportToPDF() {
+    const { trips } = getAppData();
+    const tripCount = trips.length;
+    const message = getTranslation('mock_export_pdf').replace('${count}', tripCount);
+    
+    showPopup(
+        getTranslation('export_report'),
+        message,
+        'info'
+    );
 }
 
 
@@ -972,24 +1090,3 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavbarText(); 
     renderCurrentPage();
 });
-
-function showPopup(title, text, icon, callback = null) {
-    if (typeof Swal === 'undefined') {
-        // Fallback...
-        alert(`${title}: ${text}`);
-        if (callback) callback();
-        return;
-    }
-    
-    Swal.fire({
-        title: title,
-        text: text,
-        icon: icon, // 'success', 'error', 'warning', 'info', 'question'
-        confirmButtonText: getTranslation('confirm'),
-        confirmButtonColor: 'var(--color-primary)' // ใช้สีหลักของแอป
-    }).then((result) => {
-        if (result.isConfirmed && callback) {
-            callback();
-        }
-    });
-}
