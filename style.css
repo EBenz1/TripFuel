@@ -1,0 +1,217 @@
+/* style.css */
+
+/* === 1. Custom Properties (Theme Variables) === */
+:root {
+    /* Light Theme Defaults */
+    --color-primary: #2563eb;       /* Blue-600 */
+    --color-text: #1f2937;          /* Gray-900 */
+    --color-text-sub: #6b7280;      /* Gray-500 */
+    --color-bg-body: #f9fafb;       /* Gray-50 */
+    --color-bg-card: #ffffff;       /* White */
+    --color-bg-nav: #ffffff;
+    --color-border: #e5e7eb;        /* Gray-200 */
+    --color-primary: #3b82f6;
+    --color-primary-light: #eff6ff;
+    /* === เพิ่ม: สีสำหรับปุ่มที่สบายตา === */
+    /* Yellow (Export) */
+    --color-soft-yellow: #fcd34d; /* เช่น yellow-400 */
+    --color-soft-yellow-border: #f59e0b; /* เช่น yellow-500 */
+    
+    /* Blue (Edit) */
+    --color-soft-blue: #60a5fa; /* เช่น blue-400 */
+    --color-soft-blue-border: #3b82f6; /* เช่น blue-500 */
+    
+    /* Red (Delete) */
+    --color-soft-red: #f87171; /* เช่น red-400 */
+    --color-soft-red-border: #ef4444; /* เช่น red-500 */
+}
+
+
+/* Dark Mode Overrides */
+.dark-mode {
+    --color-primary: #60a5fa;       /* Blue-400 */
+    --color-text: #f3f4f6;          /* Gray-100 */
+    --color-text-sub: #9ca3af;      /* Gray-400 */
+    --color-bg-body: #1f2937;       /* Gray-900 */
+    --color-bg-card: #374151;       /* Gray-700 */
+    --color-bg-nav: #1f2937;
+    --color-border: #4b5563;        /* Gray-700 */
+    --color-primary: #60a5fa;
+    --color-primary-light: #1e3a5a;
+}
+
+/* === 2. Global & Mobile Layout === */
+body {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg-body);
+    color: var(--color-text);
+    transition: background-color 0.3s, color 0.3s;
+    /* ปรับ Font Weight เริ่มต้นให้เป็น 400 (Regular) จากเดิมที่อาจเป็น 300 */
+    font-weight: 400;
+}
+
+#app-container {
+    max-width: 450px; /* Mobile App Width */
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    min-height: 100vh;
+    position: relative; /* สำหรับ Navigation Bar */
+    background-color: var(--color-bg-card);
+}
+
+#main-content {
+    padding: 20px 15px;
+    padding-bottom: 80px; /* เว้นพื้นที่ให้ Navbar */
+}
+
+/* === 3. Navigation Bar (TripFuel Style) === */
+#bottom-navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 65px;
+    background-color: var(--color-bg-nav);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text-sub);
+    transition: color 0.3s, background-color 0.3s;
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.nav-item.active {
+    color: var(--color-primary);
+    background-color: rgba(37, 99, 235, 0.05); /* Light blue background for active */
+}
+.dark-mode .nav-item.active {
+    background-color: rgba(96, 165, 250, 0.1); 
+}
+
+.nav-item i {
+    font-size: 18px;
+}
+
+.nav-item span {
+    font-size: 10px;
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+/* === 4. Component Styles (Card, Button, Form) === */
+
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 20px;
+}
+
+/* Card Style (TripFuel Look) */
+.card {
+    background-color: var(--color-bg-card);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-border);
+    margin-bottom: 15px;
+}
+
+/* Button */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-primary); 
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700; /* ใช้ความหนา 700 เพื่อความชัดเจน */
+    cursor: pointer;
+    transition: opacity 0.2s;
+    text-align: center;
+    text-decoration: none; /* เพื่อรองรับการใช้เป็น <a> tag */
+    
+    /* *************************************** */
+    /* ** เพิ่ม/แก้ไขส่วนนี้เพื่อให้ Font ถูกต้องบนปุ่ม ** */
+    font-family: 'IBM Plex Sans Thai', sans-serif; 
+    /* *************************************** */
+}
+.btn-primary:hover {
+    background-color: #1d4ed8; /* Darker blue */
+    opacity: 0.9;
+}
+.dark-mode .btn-primary {
+    background-color: var(--color-primary);
+}
+.dark-mode .btn-primary:hover {
+    background-color: #3b82f6;
+}
+
+/* Input/Select */
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--color-text-sub);
+    font-weight: 500;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background-color: var(--color-bg-card);
+    color: var(--color-text);
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+#bottom-navbar {
+    /* ... เหมือนเดิม ... */
+    /* *** เพิ่มความสูงเล็กน้อยเพื่อรองรับข้อความที่ยาวขึ้น *** */
+    height: 70px; 
+    /* ... เหมือนเดิม ... */
+}
+
+.form-group input, .form-group select, .form-group textarea, 
+.form-group select option { /* เพิ่ม select option เพื่อความแน่ใจ */
+    font-family: 'IBM Plex Sans Thai', sans-serif; /* บังคับใช้ Font หลัก */
+    /* โค้ดเดิม: */
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background-color: var(--color-bg-card);
+    color: var(--color-text);
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus, .form-group select:focus {
+    /* โค้ดเดิม: */
+    border-color: var(--color-primary);
+    outline: none;
+}
