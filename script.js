@@ -45,6 +45,12 @@ const translations = {
     'add_car': { th: 'เพิ่มรถยนต์ใหม่', en: 'Add New Car' },
     'car_name': { th: 'ชื่อรถ', en: 'Car Name' },
     'plate': { th: 'ทะเบียนรถ', en: 'License Plate' },
+    'search_trip': { th: 'ค้นหาทริป...', en: 'Search Trip...' },
+    'filter_by_car': { th: 'กรองตามรถ', en: 'Filter by Car' },
+    'show_all': { th: 'แสดงทั้งหมด', en: 'Show All' },
+    'no_matching_trips': { th: 'ไม่พบรายการทริปที่ตรงกับเงื่อนไข', en: 'No matching trips found' },
+    'latest_trips': { th: 'ทริปล่าสุด', en: 'Latest Trips' },
+    'trips_found': { th: 'รายการที่พบ', en: 'trips found' },
     'mileage': { th: 'เลขไมล์เริ่มต้น (กม.)', en: 'Starting Mileage (km)' },
     'save_btn': { th: 'บันทึกรถยนต์', en: 'Save Car' },
     'current_cars': { th: 'รายการรถยนต์ปัจจุบัน', en: 'Current Cars' },
@@ -53,6 +59,11 @@ const translations = {
     'car_delete_success': { th: 'ลบรถเรียบร้อย!', en: 'Car deleted successfully!' },
     'view_detail': { th: 'ดูรายละเอียด', en: 'View Detail' },
     'trip_detail': { th: 'รายละเอียดทริป', en: 'Trip Detail' },
+    'search_trip': { th: 'ค้นหาทริป...', en: 'Search Trip...' },
+    'filter_by_car': { th: 'กรองตามรถ', en: 'Filter by Car' },
+    'show_all': { th: 'แสดงทั้งหมด', en: 'Show All' },
+    'no_matching_trips': { th: 'ไม่พบรายการทริปที่ตรงกับเงื่อนไข', en: 'No matching trips found' },
+    'latest_trips': { th: 'ทริปล่าสุด', en: 'Latest Trips' },
     'distance': { th: 'ระยะทาง', en: 'Distance' },
     'fuel_used': { th: 'น้ำมันใช้ไป', en: 'Fuel Used' },
     'fuel_eff': { th: 'อัตราสิ้นเปลือง', en: 'Fuel Efficiency' },
@@ -1079,7 +1090,142 @@ function exportToPDF() {
         'info'
     );
 }
+// 4.3 Trip List (ปรับปรุงใหม่เพื่อรองรับ Filter/Search และแสดงแค่ 4 ทริปล่าสุดตอนเริ่มต้น)
+function renderTripList() {
+    const { trips, cars } = getAppData();
+    
+    // เรียงลำดับทริปจากใหม่ไปเก่า (ตาม ID ที่เป็น timestamp)
+    const sortedTrips = trips.slice().sort((a, b) => {
+        // แตก ID เพื่อเปรียบเทียบ timestamp
+        const timeA = parseInt(a.id.split('-')[1]);
+        const timeB = parseInt(b.id.split('-')[1]);
+        return timeB - timeA; // ใหม่สุดอยู่ก่อน
+    });
+    
+    const getCarName = (carId) => {
+        const car = cars.find(c => c.id === carId);
+        return car ? `${car.name} (${car.plate})` : getTranslation('no_trip_detail');
+    };
 
+    // UI Structure (เพิ่ม Search และ Filter Controls)
+    mainContent.innerHTML = `
+        <h1>📋 ${getTranslation('trip_list')}</h1>
+        
+        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <div class="form-group" style="flex-grow: 1; margin: 0;">
+                <input 
+                    type="text" 
+                    id="trip-search-input" 
+                    placeholder="${getTranslation('search_trip')}" 
+                    style="width: 100%;"
+                >
+            </div>
+            <div class="form-group" style="margin: 0; min-width: 150px;">
+                <select id="car-filter-select" style="width: 100%; height: 42px; border-radius: 8px; padding: 0 10px;">
+                    <option value="all">${getTranslation('filter_by_car')}: ${getTranslation('show_all')}</option>
+                    ${cars.map(car => `<option value="${car.id}">${car.name}</option>`).join('')}
+                </select>
+            </div>
+        </div>
+
+        <p id="trip-list-title" style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--color-text-sub);">
+            ⭐ ${getTranslation('latest_trips')} (${Math.min(sortedTrips.length, 4)} ${getTranslation('trips_found')})
+        </p>
+        
+        <div id="trip-list-container" style="margin-top: 10px;">
+            </div>
+    `;
+    
+    // Initial Render of the latest 4-5 trips (ใช้ 4 ตามโค้ดเดิม)
+    renderFilteredTrips(sortedTrips.slice(0, 4), getCarName);
+
+    // Add Event Listeners
+    document.getElementById('trip-search-input')?.addEventListener('input', () => {
+        applyFilters(sortedTrips, getCarName);
+    });
+    document.getElementById('car-filter-select')?.addEventListener('change', () => {
+        applyFilters(sortedTrips, getCarName);
+    });
+}
+// เพิ่มฟังก์ชันนี้ต่อท้ายฟังก์ชันอื่นๆ ใน script.js (นอกเหนือจาก renderTripList)
+
+/**
+ * กรองและค้นหารายการทริปตามเงื่อนไข
+ * @param {Array<Object>} sortedTrips - รายการทริปที่ถูกเรียงแล้ว (ใหม่ไปเก่า)
+ * @param {Function} getCarName - ฟังก์ชันสำหรับดึงชื่อรถ
+ */
+function applyFilters(sortedTrips, getCarName) {
+    const searchTerm = document.getElementById('trip-search-input').value.toLowerCase();
+    const carFilter = document.getElementById('car-filter-select').value;
+
+    let filteredTrips = sortedTrips;
+
+    // 1. กรองตามรถ
+    if (carFilter !== 'all' && carFilter) {
+        filteredTrips = filteredTrips.filter(trip => trip.carId === carFilter);
+    }
+    
+    // 2. ค้นหา
+    if (searchTerm.length > 0) {
+        filteredTrips = filteredTrips.filter(trip => 
+            trip.tripName.toLowerCase().includes(searchTerm) ||
+            (trip.hashtags || '').toLowerCase().includes(searchTerm) ||
+            getCarName(trip.carId).toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // **NOTE: เมื่อมีการค้นหา/กรอง จะแสดงผลทั้งหมดที่ตรงเงื่อนไข ไม่ใช่แค่ 4 ทริป**
+    renderFilteredTrips(filteredTrips, getCarName);
+    
+    // อัปเดต Title
+    const titleElement = document.querySelector('#main-content h1 + p'); // เลือก P ที่อยู่ใต้ H1
+    if (titleElement) {
+        if (searchTerm || carFilter !== 'all') {
+             titleElement.textContent = `${getTranslation('trip_list')} (${filteredTrips.length} รายการที่พบ)`;
+        } else {
+             titleElement.textContent = `⭐ ${getTranslation('latest_trips')} (${Math.min(filteredTrips.length, 4)} รายการ)`;
+        }
+    }
+}
+
+
+/**
+ * แสดงผลรายการทริปที่ถูกกรอง/ค้นหาแล้ว
+ * @param {Array<Object>} tripsToRender - รายการทริปที่จะแสดงผล
+ * @param {Function} getCarName - ฟังก์ชันสำหรับดึงชื่อรถ
+ */
+function renderFilteredTrips(tripsToRender, getCarName) {
+    const container = document.getElementById('trip-list-container');
+    if (!container) return;
+    
+    if (tripsToRender.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--color-text-sub); padding: 20px;">${getTranslation('no_matching_trips')}</p>`;
+        return;
+    }
+
+    container.innerHTML = tripsToRender.map(trip => { 
+        // Logic เดิมในการคำนวณและแสดง Hashtags
+        const fuelUsed = trip.fuelStartLiters - trip.fuelEndLiters;
+        const kmPerLiter = trip.totalKm / fuelUsed;
+        
+        const hashtagsHtml = trip.hashtags ? 
+            `<p style="font-size: 12px; color: var(--color-text-sub); margin-top: 5px;">${trip.hashtags.split(/\s+/).filter(t => t.startsWith('#')).map(tag => `<span style="color: var(--color-primary); margin-right: 5px;">${tag}</span>`).join('')}</p>` : 
+            '';
+
+        return `
+            <div class="card trip-item" data-trip-id="${trip.id}" style="margin-bottom: 10px; padding: 15px; cursor: pointer;" onclick="window.location.hash = '#trips:${trip.id}'">
+                <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 5px;">${trip.tripName}</p>
+                <p style="font-size: 12px; color: var(--color-text-sub);">รถ: ${getCarName(trip.carId)} | เมื่อ: ${trip.dateTime}</p>
+                ${hashtagsHtml}
+                <hr style="border-top: 1px dashed var(--color-border); margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+                    <span>${getTranslation('distance')}: <b>${trip.totalKm.toFixed(1)} ${getTranslation('km_unit')}</b></span>
+                    <span style="color: #10b981; font-weight: 700;">${getTranslation('view_detail')} &raquo;</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
 
 // === 5. Initialization ===
 window.addEventListener('hashchange', renderCurrentPage);
